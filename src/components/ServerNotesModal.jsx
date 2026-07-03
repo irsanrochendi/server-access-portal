@@ -30,9 +30,13 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
   const [allUsers, setAllUsers] = useState([]);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [selectedUsernames, setSelectedUsernames] = useState([]);
+  const isAdmin = (() => {
+    try { const t = JSON.parse(atob(localStorage.getItem('portal_token').split('.')[1])); return t.role === 'admin'; } catch(_) { return false; }
+  })();
 
-  // Load all users for visible_to dropdown
+  // Load all users for visible_to dropdown (only if admin)
   useEffect(() => {
+    if (!isAdmin) return;
     const fetchUsers = async () => {
       try {
         const res = await fetch('/api/users', {
@@ -43,7 +47,7 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
       } catch (_) {}
     };
     fetchUsers();
-  }, []);
+  }, [isAdmin]);
 
   const [loading, setLoading] = useState(true);
 
@@ -327,7 +331,7 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
           </div>
 
           {/* Visible To — multi-select usernames */}
-          <div className="relative">
+          {isAdmin && <div className="relative">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
               <User className="w-4 h-4 text-purple-500" />
               User yang Boleh Lihat (selain admin)
