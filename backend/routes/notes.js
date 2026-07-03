@@ -5,13 +5,29 @@ import { encrypt, decrypt } from '../services/encryption.js';
 
 const router = Router();
 router.use(authenticate);
-router.use(authorize('admin'));
 
-// GET /api/server-notes/:id/notes — dengan password decrypted
+/**
+ * Check: admin selalu boleh. Non-admin hanya boleh jika email mereka
+ * ada di kolom visible_to server_notes (comma-separated).
+ */
+function canViewNotes(req, serverId) {
+  if (req.user.role === 'admin') return true;
+  const db = getDb();
+  const notes = db.prepare('SELECT visible_to FROM server_notes WHERE server_id = ?').get(serverId);
+  if (!notes || !notes.visible_to) return false;
+  const allowed = notes.visible_to.split(',').map(e => e.trim().toLowerCase());
+  return allowed.includes(req.user.email?.toLowerCase());
+}
+
+// GET /api/server-notes/:id/notes — admin atau user di visible_to
 router.get('/:id/notes', (req, res) => {
   const db = getDb();
   const server = db.prepare('SELECT id, name, ip_address FROM servers WHERE id = ?').get(req.params.id);
   if (!server) return res.status(404).json({ error: 'Server tidak ditemukan' });
+
+  if (!canViewNotes(req, server.id)) {
+    return res.status(403).json({ error: 'Anda tidak diizinkan melihat catatan server ini' });
+  }
 
   let notes = db.prepare('SELECT * FROM server_notes WHERE server_id = ?').get(req.params.id);
   if (!notes) {
@@ -27,6 +43,7 @@ router.get('/:id/notes', (req, res) => {
         licenseExpire: '',
         owner: '',
         docLinks: [],
+        visibleTo: '',
       },
     });
   }
@@ -43,13 +60,18 @@ router.get('/:id/notes', (req, res) => {
       licenseExpire: notes.license_expire,
       owner: notes.owner,
       docLinks: JSON.parse(notes.documentation_links || '[]'),
+      visibleTo: notes.visible_to || '',
       updatedAt: notes.updated_at,
     },
   });
 });
 
-// PUT /api/servers/:id/notes — save/update
+// PUT /api/server-notes/:id/notes — admin only (save & set visible_to)
 router.put('/:id/notes', (req, res) => {
+  // Only admin can edit
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Hanya admin yang bisa mengedit catatan server' });
+  }
   const db = getDb();
   const server = db.prepare('SELECT id FROM servers WHERE id = ?').get(req.params.id);
   if (!server) return res.status(404).json({ error: 'Server tidak ditemukan' });
@@ -64,6 +86,7 @@ router.put('/:id/notes', (req, res) => {
     licenseExpire = '',
     owner = '',
     docLinks = [],
+    visibleTo = '',
   } = req.body;
 
   // Encrypt password if provided; if empty string, keep existing encrypted value
@@ -81,8 +104,8 @@ router.put('/:id/notes', (req, res) => {
     INSERT INTO server_notes (
       server_id, default_username, default_password_encrypted,
       ssh_port, vsphere_port, notes, license_key, license_expire,
-      owner, documentation_links, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      owner, documentation_links, visible_to, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     ON CONFLICT(server_id) DO UPDATE SET
       default_username = excluded.default_username,
       default_password_encrypted = CASE WHEN excluded.default_password_encrypted = '' THEN default_password_encrypted ELSE excluded.default_password_encrypted END,
@@ -93,11 +116,12 @@ router.put('/:id/notes', (req, res) => {
       license_expire = excluded.license_expire,
       owner = excluded.owner,
       documentation_links = excluded.documentation_links,
+      visible_to = excluded.visible_to,
       updated_at = datetime('now')
   `).run(
     server.id, defaultUsername, encrypted,
     sshPort, vspherePort, notes, licenseKey, licenseExpire,
-    owner, linksJson,
+    owner, linksJson, visibleTo,
   );
 
   // Log

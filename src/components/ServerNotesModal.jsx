@@ -18,6 +18,7 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
     licenseExpire: '',
     owner: '',
     docLinks: [],
+    visibleTo: '',
   };
 
   const [draft, setDraft] = useState(defaultDraft);
@@ -69,6 +70,7 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
           licenseExpire: notes.licenseExpire || '',
           owner: notes.owner || '',
           docLinks: Array.isArray(notes.docLinks) ? notes.docLinks : [],
+          visibleTo: notes.visibleTo || '',
         });
       } catch (_) {
         // Keep defaults if fetch fails
@@ -318,6 +320,23 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
               />
             </div>
+          </div>
+
+          {/* Visible To — siapa yang boleh lihat */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+              <User className="w-4 h-4 text-purple-500" />
+              User yang Boleh Lihat (selain admin)
+            </label>
+            <input
+              value={draft.visibleTo || ''}
+              onChange={(e) => setDraft((d) => ({ ...d, visibleTo: e.target.value }))}
+              placeholder="Email user, pisah koma. Kosong = semua admin"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+            />
+            <p className="text-xs text-slate-400 mt-1">
+              Contoh: staff@portal.local, user2@portal.local
+            </p>
           </div>
 
           {/* Link Dokumentasi */}

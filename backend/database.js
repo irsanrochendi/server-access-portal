@@ -124,6 +124,7 @@ export function initDb() {
       license_expire TEXT DEFAULT '',
       owner TEXT DEFAULT '',
       documentation_links TEXT DEFAULT '[]',
+      visible_to TEXT DEFAULT '',  -- email users yang boleh lihat, kosong = admin only
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
