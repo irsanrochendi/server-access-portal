@@ -1,5 +1,43 @@
 # Changelog — Server Access Portal AST
 
+## v1.2.0 — Server Notes & Credentials, Auth Fixes
+
+### 🔐 Server Notes & Credentials (Fitur Baru)
+- **Catatan per-server** — kredensial, port, lisensi, owner, link dokumentasi terpusat
+- **Enkripsi AES-256-GCM** — password di-encrypt di DB, hanya admin yang bisa akses
+- **Auto-hide password 30 detik** — saat reveal password, otomatis hidden setelah 30s
+- **Confirm 2-klik** — tombol simpan perlu 2 klik untuk mencegah kesalahan
+- **Multi-select user dropdown** — admin bisa atur user non-admin siapa saja yang boleh lihat catatan
+- **Audit trail terpisah** — `credential_access_logs` (tidak ikut retensi 7 hari)
+- **ServerNotesModal** — UI modal editor catatan dengan show/hide/copy password
+- **ServerNotesLogModal** — audit log viewer per server
+
+### 👥 Akses Kontrol Catatan
+- **Admin** — bisa lihat + edit semua catatan
+- **Staff di `visible_to`** — bisa lihat (read-only) kalau email tercantum
+- **Staff lain** — dapet "Access Denied! Contact Your Administrator."
+- **Tombol Lock di ServerCard** — semua user bisa lihat 🔒, tapi akses di-filter backend
+
+### 🛡️ Perbaikan Auth & Login
+- **Fix login crash** — try/catch di route login, gak crash walau AD timeout
+- **Role tidak di-override** — role user AD gak diubah tiap login (hanya lewat Sync AD)
+- **Fix staff login** — user `staff@portal.local` sudah ada di DB
+
+### 🗄️ Database
+- Tabel baru `server_notes` — catatan + kredensial terenkripsi per server
+- Tabel baru `credential_access_logs` — audit trail akses kredensial
+- Kolom `visible_to` di `server_notes` — atur siapa yang boleh lihat
+- Migration otomatis untuk existing DB (ADD COLUMN if not exists)
+
+### ⚙️ Teknis
+- `backend/services/encryption.js` — AES-256-GCM encrypt/decrypt
+- `backend/routes/notes.js` — 5 endpoint API (GET/PUT notes, audit, logs)
+- `backend/.env.example` — template untuk ENCRYPTION_KEY
+- `dotenv` — load .env otomatis di server.js
+- Fix port 81 CORS — tambah origin di cors config
+
+---
+
 ## v1.1.0 — Restore Database, Role Count Fix & Division Preservation
 
 ### ♻️ Database Restore (Baru!)
