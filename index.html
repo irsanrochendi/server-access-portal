@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id" class="">
+  <head>
+    <meta charset="UTF-8" />
+    <link id="favicon-link" rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <script>
+      // Load custom favicon via public API (tanpa token)
+      (function() {
+        var d = document, l = d.getElementById('favicon-link');
+        if (!l) return;
+        fetch('/api/upload/icon').then(function(r){ return r.json(); }).then(function(data){
+          if (data && data.filename) {
+            var isSvg = data.filename.endsWith('.svg');
+            var isIco = data.filename.endsWith('.ico');
+            l.type = isIco ? 'image/x-icon' : (isSvg ? 'image/svg+xml' : 'image/png');
+            l.href = data.url;
+          }
+        }).catch(function(){});
+        // Fallback: tetap pakai favicon.svg kalo gagal
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2563eb" />
+    <title>Server Access Portal AST</title>
+    <script>
+      // Terapkan tema lebih awal untuk mencegah flash
+      (function () {
+        try {
+          var t = localStorage.getItem('portal-theme') || 'light';
+          var sys = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (t === 'dark' || (t === 'system' && sys)) {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

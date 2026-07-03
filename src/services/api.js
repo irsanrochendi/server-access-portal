@@ -1,0 +1,100 @@
+const API_BASE = '/api';
+
+function getToken() {
+  return localStorage.getItem('portal_token');
+}
+
+async function request(url, options = {}) {
+  const token = getToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  };
+
+  const res = await fetch(`${API_BASE}${url}`, { ...options, headers });
+
+  let data;
+  try {
+    data = await res.json();
+  } catch (e) {
+    throw new Error('Gagal memproses respons server');
+  }
+
+  if (!res.ok) {
+    throw new Error(data.error || `HTTP ${res.status}`);
+  }
+  return data;
+}
+
+export const api = {
+  // Auth
+  login: (email, password) =>
+    request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  logout: () =>
+    request('/auth/logout', { method: 'POST' }),
+  getMe: () =>
+    request('/auth/me'),
+
+  // Servers
+  getServers: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.active) q.set('active', params.active);
+    if (params.search) q.set('search', params.search);
+    if (params.category) q.set('category', params.category);
+    if (params.environment) q.set('environment', params.environment);
+    if (params.status) q.set('status', params.status);
+    const qs = q.toString();
+    return request(`/servers${qs ? `?${qs}` : ''}`);
+  },
+  getServer: (id) => request(`/servers/${id}`),
+  createServer: (data) => request('/servers', { method: 'POST', body: JSON.stringify(data) }),
+  updateServer: (id, data) => request(`/servers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteServer: (id) => request(`/servers/${id}`, { method: 'DELETE' }),
+  toggleServerActive: (id) => request(`/servers/${id}/toggle-active`, { method: 'POST' }),
+
+  // Users
+  getUsers: () => request('/users'),
+  createUser: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
+  updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+
+  // Roles
+  getRoles: () => request('/roles'),
+  createRole: (data) => request('/roles', { method: 'POST', body: JSON.stringify(data) }),
+  updateRole: (id, data) => request(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteRole: (id) => request(`/roles/${id}`, { method: 'DELETE' }),
+
+  // Logs
+  getLogs: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.action) q.set('action', params.action);
+    if (params.search) q.set('search', params.search);
+    if (params.limit) q.set('limit', params.limit);
+    const qs = q.toString();
+    return request(`/logs${qs ? `?${qs}` : ''}`);
+  },
+
+  // Settings
+  getSettings: () => request('/settings'),
+  updateSettings: (settings) => request('/settings', { method: 'PUT', body: JSON.stringify({ settings }) }),
+
+  // Status
+  checkAllStatus: () => request('/status/check-all', { method: 'POST' }),
+  checkServerStatus: (id) => request(`/status/check/${id}`, { method: 'POST' }),
+  checkLatency: (id) => request(`/status/latency/${id}`, { method: 'POST' }),
+
+  // Categories (custom fields)
+  getCategories: () => request('/categories'),
+  createCategory: (data) => request('/categories', { method: 'POST', body: JSON.stringify(data) }),
+  deleteCategory: (id) => request(`/categories/${id}`, { method: 'DELETE' }),
+
+  // Backup
+  listBackups: () => request('/backup'),
+  getBackupSettings: () => request('/backup/settings'),
+  saveBackupSettings: (data) => request('/backup/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  runBackup: (label) => request('/backup/run', { method: 'POST', body: JSON.stringify({ label }) }),
+  deleteBackup: (filename) => request(`/backup/${encodeURIComponent(filename)}`, { method: 'DELETE' }),
+  downloadBackup: (filename) => `${API_BASE}/backup/download/${encodeURIComponent(filename)}`,
+  restoreBackup: (filename) => request('/backup/restore', { method: 'POST', body: JSON.stringify({ filename }) }),
+};
