@@ -58,14 +58,9 @@ router.post('/login', async (req, res) => {
             'INSERT INTO users (name, email, password_hash, role, is_active) VALUES (?, ?, ?, ?, 1)'
           ).run(adResult.user.name, adResult.user.email, 'AD_USER', adResult.user.role);
           portalUser = db.prepare('SELECT * FROM users WHERE id = ?').get(result.lastInsertRowid);
-        } else {
-          // Update role dari AD setiap kali login
-          if (portalUser.role !== adResult.user.role) {
-            db.prepare('UPDATE users SET role = ?, updated_at = datetime("now") WHERE id = ?')
-              .run(adResult.user.role, portalUser.id);
-            portalUser.role = adResult.user.role;
-          }
         }
+        // Role TIDAK di-update otomatis saat login — biar admin atur manual.
+        // Role hanya di-update lewat Sync AD (halaman Users).
 
         db.prepare(`INSERT INTO activity_logs (user_id, action, module, description, ip_address, created_at)
           VALUES (?, ?, ?, ?, ?, datetime('now'))`)
