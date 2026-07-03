@@ -56,6 +56,7 @@ app.use('/api/export', exportRoutes);
 app.use('/api/ad', adRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
+app.use('/api/db', dbRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/server-notes', notesRoutes);  // /api/server-notes/:id/notes/*
 
