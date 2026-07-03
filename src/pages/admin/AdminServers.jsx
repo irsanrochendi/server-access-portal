@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Server, ExternalLink, Eye, EyeOff, Pencil, Trash2, Download } from 'lucide-react';
+import { Server, ExternalLink, Eye, EyeOff, Pencil, Trash2, Download, Lock, Activity } from 'lucide-react';
 import { openServer } from '../../components/ServerCard';
 import { useServers } from '../../contexts/ServerContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -7,6 +7,8 @@ import { api } from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
+import ServerNotesModal from '../../components/ServerNotesModal';
+import ServerNotesLogModal from '../../components/ServerNotesLogModal';
 
 const PROTOCOLS = ['HTTP', 'HTTPS', 'SSH', 'RDP', 'FTP', 'TCP', 'OTHER'];
 const ENVS = ['Production', 'Staging', 'Development', 'Internal'];
@@ -52,6 +54,8 @@ export default function AdminServers() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showNotesFor, setShowNotesFor] = useState(null);
+  const [showLogsFor, setShowLogsFor] = useState(null);
 
   const openCreate = () => {
     setEditingId(null);
@@ -217,6 +221,8 @@ export default function AdminServers() {
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => setShowNotesFor(s)} className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-400 hover:text-amber-600 transition-colors" title="Catatan & Kredensial"><Lock className="w-4 h-4" /></button>
+                      <button onClick={() => setShowLogsFor(s)} className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Log Kredensial"><Activity className="w-4 h-4" /></button>
                       <button onClick={() => openServer(s)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-green-600 transition-colors" title="Open"><ExternalLink className="w-4 h-4" /></button>
                       <button onClick={() => handleToggle(s)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-amber-600 transition-colors" title={s.is_active ? 'Nonaktifkan' : 'Aktifkan'}>
                         {s.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -334,6 +340,21 @@ export default function AdminServers() {
       )}
 
       <ConfirmModal open={!!deleteTarget} title="Hapus Server" message={`Yakin ingin menghapus server "${deleteTarget?.name}"?`} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} loading={deleting} />
+
+      {showNotesFor && (
+        <ServerNotesModal
+          server={showNotesFor}
+          onClose={() => setShowNotesFor(null)}
+          onSave={() => {}}
+        />
+      )}
+
+      {showLogsFor && (
+        <ServerNotesLogModal
+          server={showLogsFor}
+          onClose={() => setShowLogsFor(null)}
+        />
+      )}
     </div>
   );
 }

@@ -97,4 +97,11 @@ export const api = {
   deleteBackup: (filename) => request(`/backup/${encodeURIComponent(filename)}`, { method: 'DELETE' }),
   downloadBackup: (filename) => `${API_BASE}/backup/download/${encodeURIComponent(filename)}`,
   restoreBackup: (filename) => request('/backup/restore', { method: 'POST', body: JSON.stringify({ filename }) }),
+
+  // Server Notes (admin only)
+  getServerNotes: (serverId) => request(`/server-notes/${serverId}/notes`),
+  updateServerNotes: (serverId, data) => request(`/server-notes/${serverId}/notes`, { method: 'PUT', body: JSON.stringify(data) }),
+  logServerNoteAccess: (serverId, action) => request(`/server-notes/${serverId}/notes/audit`, { method: 'POST', body: JSON.stringify({ action }) }),
+  getServerNoteLogs: (serverId, limit) =>
+    request(`/server-notes/${serverId}/notes/logs${limit ? `?limit=${limit}` : ''}`),
 };

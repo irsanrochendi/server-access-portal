@@ -111,6 +111,36 @@ export function initDb() {
       role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
       UNIQUE(user_id, role_id)
     );
+
+    CREATE TABLE IF NOT EXISTS server_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_id INTEGER NOT NULL UNIQUE REFERENCES servers(id) ON DELETE CASCADE,
+      default_username TEXT DEFAULT '',
+      default_password_encrypted TEXT DEFAULT '',
+      ssh_port INTEGER DEFAULT 22,
+      vsphere_port INTEGER DEFAULT 443,
+      notes TEXT DEFAULT '',
+      license_key TEXT DEFAULT '',
+      license_expire TEXT DEFAULT '',
+      owner TEXT DEFAULT '',
+      documentation_links TEXT DEFAULT '[]',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS credential_access_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      server_id INTEGER REFERENCES servers(id) ON DELETE CASCADE,
+      action TEXT NOT NULL CHECK(action IN ('view', 'copy')),
+      ip_address TEXT,
+      user_agent TEXT DEFAULT '',
+      accessed_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_server_notes_server_id ON server_notes(server_id);
+    CREATE INDEX IF NOT EXISTS idx_cred_access_server ON credential_access_logs(server_id, accessed_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_cred_access_user ON credential_access_logs(user_id, accessed_at DESC);
   `);
 
   return d;

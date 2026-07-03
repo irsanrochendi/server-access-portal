@@ -1,10 +1,13 @@
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: join(__dirname, '.env') });
+
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import { initDb } from './database.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import authRoutes from './routes/auth.js';
 import serverRoutes from './routes/servers.js';
 import userRoutes from './routes/users.js';
@@ -21,6 +24,7 @@ import adRoutes from './routes/ad.js';
 import backupRoutes from './routes/backup.js';
 
 import uploadRoutes from './routes/upload.js';
+import notesRoutes from './routes/notes.js';
 import { initBackupSettings } from './services/backup.js';
 import { startAutoBackup } from './services/autoBackupScheduler.js';
 
@@ -52,8 +56,8 @@ app.use('/api/export', exportRoutes);
 app.use('/api/ad', adRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use('/api/db', dbRoutes);
 app.use('/api/backup', backupRoutes);
+app.use('/api/server-notes', notesRoutes);  // /api/server-notes/:id/notes/*
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();
