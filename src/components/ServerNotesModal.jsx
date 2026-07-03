@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
-  X, Save, Eye, EyeOff, Copy, Check, Plus, Trash2, ShieldAlert, ExternalLink, AlertTriangle,
-  Server, Lock, Link as LinkIcon, Calendar, User, FileText, RotateCcw,
+  X, Eye, EyeOff, Copy, Plus, Trash2, ExternalLink, AlertTriangle,
+  Server, Lock, Link as LinkIcon, Calendar, User, FileText, RotateCcw, ChevronDown,
 } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
@@ -27,23 +27,23 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
   const [confirming, setConfirming] = useState(false);
   const [newLink, setNewLink] = useState('');
   const [saving, setSaving] = useState(false);
+  const [allUsers, setAllUsers] = useState([]);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [selectedUsernames, setSelectedUsernames] = useState([]);
 
-  // Load initial notes
+  // Load all users for visible_to dropdown
   useEffect(() => {
-    if (initialNotes) {
-      setDraft({
-        defaultUsername: initialNotes.defaultUsername || '',
-        defaultPassword: initialNotes.defaultPassword || '',
-        sshPort: initialNotes.sshPort ?? 22,
-        vspherePort: initialNotes.vspherePort ?? 443,
-        notes: initialNotes.notes || '',
-        licenseKey: initialNotes.licenseKey || '',
-        licenseExpire: initialNotes.licenseExpire || '',
-        owner: initialNotes.owner || '',
-        docLinks: Array.isArray(initialNotes.docLinks) ? initialNotes.docLinks : [],
-      });
-    }
-  }, [initialNotes]);
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch('/api/users', {
+          headers: { Authorization: `Bearer ${localStorage.getItem('portal_token')}` },
+        });
+        const data = await res.json();
+        setAllUsers(data.users || []);
+      } catch (_) {}
+    };
+    fetchUsers();
+  }, []);
 
   const [loading, setLoading] = useState(true);
 
@@ -72,6 +72,9 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
           docLinks: Array.isArray(notes.docLinks) ? notes.docLinks : [],
           visibleTo: notes.visibleTo || '',
         });
+        setSelectedUsernames(
+          (notes.visibleTo || '').split(',').filter(Boolean).map(u => u.trim().toLowerCase())
+        );
       } catch (_) {
         // Keep defaults if fetch fails
       }
@@ -135,7 +138,8 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
       setSaving(true);
       try {
         const { api } = await import('../services/api.js');
-        await api.updateServerNotes(server.id, draft);
+        const saveData = { ...draft, visibleTo: selectedUsernames.join(',') };
+        await api.updateServerNotes(server.id, saveData);
         toast.success('Catatan server disimpan');
         onSave && onSave();
         onClose();
@@ -322,20 +326,59 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
             </div>
           </div>
 
-          {/* Visible To — siapa yang boleh lihat */}
-          <div>
+          {/* Visible To — multi-select usernames */}
+          <div className="relative">
             <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
               <User className="w-4 h-4 text-purple-500" />
               User yang Boleh Lihat (selain admin)
             </label>
-            <input
-              value={draft.visibleTo || ''}
-              onChange={(e) => setDraft((d) => ({ ...d, visibleTo: e.target.value }))}
-              placeholder="Email user, pisah koma. Kosong = semua admin"
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
-            />
+            <button
+              type="button"
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm cursor-pointer hover:bg-slate-50 dark:hover:bg-white/10"
+            >
+              <span className={selectedUsernames.length === 0 ? 'text-slate-400' : ''}>
+                {selectedUsernames.length === 0
+                  ? 'Admin Only'
+                  : `${selectedUsernames.length} user dipilih`}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+            </button>
+            {showUserDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#0d1321] border border-slate-200 dark:border-white/10 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                {allUsers
+                  .filter(u => u.role !== 'admin')
+                  .map(u => {
+                    const isSelected = selectedUsernames.includes(u.email.toLowerCase());
+                    return (
+                      <label key={u.id} className="flex items-center gap-2 px-3 py-2 hover:bg-slate-50 dark:hover:bg-white/5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => {
+                            setSelectedUsernames(prev =>
+                              isSelected
+                                ? prev.filter(e => e !== u.email.toLowerCase())
+                                : [...prev, u.email.toLowerCase()]
+                            );
+                          }}
+                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-sm">{u.name}</span>
+                        <span className="text-xs text-slate-400 font-mono">{u.email}</span>
+                      </label>
+                    );
+                  })}
+                {allUsers.filter(u => u.role !== 'admin').length === 0 && (
+                  <p className="px-3 py-2 text-xs text-slate-400">Tidak ada user non-admin</p>
+                )}
+              </div>
+            )}
             <p className="text-xs text-slate-400 mt-1">
-              Contoh: staff@portal.local, user2@portal.local
+              {selectedUsernames.length === 0
+                ? 'Kosong = hanya admin yang bisa lihat catatan server ini'
+                : `User yang dipilih bisa melihat kredensial server ini: ${selectedUsernames.join(', ')}`
+              }
             </p>
           </div>
 
