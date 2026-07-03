@@ -62,11 +62,8 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
-          if (res.status === 403) {
-            toast.error('Anda tidak diizinkan melihat catatan server ini');
-          } else {
-            toast.error('Gagal memuat catatan');
-          }
+          const errMsg = res.status === 403 ? 'Access Denied! Contact Your Administrator.' : 'Gagal memuat catatan';
+          toast.error(errMsg);
           onClose();
           return;
         }
