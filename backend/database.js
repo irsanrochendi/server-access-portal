@@ -144,5 +144,11 @@ export function initDb() {
     CREATE INDEX IF NOT EXISTS idx_cred_access_user ON credential_access_logs(user_id, accessed_at DESC);
   `);
 
+  // Migrations for existing databases — add columns if missing
+  const serverNotesCols = d.prepare("PRAGMA table_info(server_notes)").all().map(c => c.name);
+  if (!serverNotesCols.includes('visible_to')) {
+    d.exec(`ALTER TABLE server_notes ADD COLUMN visible_to TEXT DEFAULT ''`);
+  }
+
   return d;
 }
