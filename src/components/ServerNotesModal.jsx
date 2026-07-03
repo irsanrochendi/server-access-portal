@@ -44,6 +44,40 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
     }
   }, [initialNotes]);
 
+  const [loading, setLoading] = useState(true);
+
+  // Auto-fetch notes dari API saat modal dibuka
+  useEffect(() => {
+    if (!server) return;
+    setLoading(true);
+    const fetchNotes = async () => {
+      try {
+        const token = localStorage.getItem('portal_token');
+        const res = await fetch(`/api/server-notes/${server.id}/notes`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Gagal memuat catatan');
+        const data = await res.json();
+        const notes = data.notes;
+        setDraft({
+          defaultUsername: notes.defaultUsername || '',
+          defaultPassword: notes.defaultPassword || '',
+          sshPort: notes.sshPort ?? 22,
+          vspherePort: notes.vspherePort ?? 443,
+          notes: notes.notes || '',
+          licenseKey: notes.licenseKey || '',
+          licenseExpire: notes.licenseExpire || '',
+          owner: notes.owner || '',
+          docLinks: Array.isArray(notes.docLinks) ? notes.docLinks : [],
+        });
+      } catch (_) {
+        // Keep defaults if fetch fails
+      }
+      setLoading(false);
+    };
+    fetchNotes();
+  }, [server]);
+
   // Auto-hide password after 30 seconds
   useEffect(() => {
     if (!pwdRevealedAt) return;
