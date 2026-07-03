@@ -61,7 +61,15 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
         const res = await fetch(`/api/server-notes/${server.id}/notes`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error('Gagal memuat catatan');
+        if (!res.ok) {
+          if (res.status === 403) {
+            toast.error('Anda tidak diizinkan melihat catatan server ini');
+          } else {
+            toast.error('Gagal memuat catatan');
+          }
+          onClose();
+          return;
+        }
         const data = await res.json();
         const notes = data.notes;
         setDraft({
@@ -80,7 +88,8 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
           (notes.visibleTo || '').split(',').filter(Boolean).map(u => u.trim().toLowerCase())
         );
       } catch (_) {
-        // Keep defaults if fetch fails
+        toast.error('Gagal memuat catatan server');
+        onClose();
       }
       setLoading(false);
     };
@@ -437,21 +446,19 @@ export default function ServerNotesModal({ server, notes: initialNotes, onClose,
           >
             Batal
           </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-xl flex items-center gap-2 transition-colors ${
-              confirming
-                ? 'bg-amber-500 hover:bg-amber-600'
-                : 'bg-indigo-600 hover:bg-indigo-700'
-            } disabled:opacity-60`}
-          >
-            {saving && (
-              <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            )}
-            <RotateCcw className="w-4 h-4" />
-            {confirming ? 'Klik lagi untuk konfirmasi' : 'Simpan Catatan'}
-          </button>
+          {isAdmin ? (
+            <button onClick={handleSave} disabled={saving}
+              className={`px-4 py-2 text-sm font-medium text-white rounded-xl flex items-center gap-2 transition-colors ${confirming ? 'bg-amber-500 hover:bg-amber-600' : 'bg-indigo-600 hover:bg-indigo-700'} disabled:opacity-60`}>
+              {saving && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+              <RotateCcw className="w-4 h-4" />
+              {confirming ? 'Klik lagi untuk konfirmasi' : 'Simpan Catatan'}
+            </button>
+          ) : (
+            <button onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-white bg-slate-500 hover:bg-slate-600 rounded-xl transition-colors">
+              Tutup
+            </button>
+          )}
         </div>
       </div>
     </div>
