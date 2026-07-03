@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Search, Wifi, WifiOff, HelpCircle, RefreshCw, Server, Activity, Zap } from 'lucide-react';
 import ServerCard from '../components/ServerCard';
+import ServerNotesModal from '../components/ServerNotesModal';
 import EmptyState from '../components/EmptyState';
 import { useServers } from '../contexts/ServerContext';
 import { useToast } from '../contexts/ToastContext';
@@ -11,6 +12,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
+  const [notesServer, setNotesServer] = useState(null);
   const activeServers = useMemo(() => servers.filter(s => s.is_active), [servers]);
 
   const filtered = useMemo(() => {
@@ -213,6 +215,7 @@ export default function Dashboard() {
               key={server.id}
               server={server}
               onCopyIp={() => toast.success('IP disalin')}
+              onShowNotes={(s) => setNotesServer(s)}
               index={i}
             />
           ))}
@@ -221,6 +224,14 @@ export default function Dashboard() {
         <EmptyState
           title="Server tidak ditemukan"
           description={search ? `Tidak ada hasil untuk "${search}"` : 'Tidak ada server sesuai filter'}
+        />
+      )}
+
+      {notesServer && (
+        <ServerNotesModal
+          server={notesServer}
+          onClose={() => setNotesServer(null)}
+          onSave={() => setNotesServer(null)}
         />
       )}
     </div>

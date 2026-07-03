@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Server, ExternalLink, Copy, Globe, Shield, Terminal, Monitor, Cpu, Activity, Lock } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { api } from '../services/api';
-import ServerNotesModal from './ServerNotesModal';
 
 function field(s, k1, k2) { return s[k1] ?? s[k2]; }
 
@@ -25,11 +24,10 @@ async function openServer(server) {
   } catch (e) { alert('Gagal: ' + e.message); }
 }
 
-export default function ServerCard({ server, onCopyIp, index = 0 }) {
+export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 }) {
   const [latency, setLatency] = useState(null);
   const [pinging, setPinging] = useState(false);
   const [pingError, setPingError] = useState(null);
-  const [showNotes, setShowNotes] = useState(false);
 
   const name = field(server, 'name', 'name');
   const ipAddress = field(server, 'ip_address', 'ipAddress');
@@ -185,7 +183,7 @@ export default function ServerCard({ server, onCopyIp, index = 0 }) {
             {isSSH ? 'Open SSH' : isRDP ? 'Open RDP' : 'Open Server'}
           </button>
           <button
-            onClick={() => setShowNotes(true)}
+            onClick={() => onShowNotes?.(server)}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl
               bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400
               hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400
@@ -212,13 +210,6 @@ export default function ServerCard({ server, onCopyIp, index = 0 }) {
         </div>
       </div>
 
-      {showNotes && (
-        <ServerNotesModal
-          server={server}
-          onClose={() => setShowNotes(false)}
-          onSave={() => setShowNotes(false)}
-        />
-      )}
     </div>
   );
 }
