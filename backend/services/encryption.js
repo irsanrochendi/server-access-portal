@@ -4,23 +4,26 @@
  * decrypt(payload)    → plaintext
  *
  * Key dari ENCRYPTION_KEY env var (64 hex chars = 32 bytes).
- * Kalau key tidak diset, throw error saat module load.
+ * Lazy-load: key dicek saat fungsi dipanggil, bukan saat module di-load.
  */
 
 import crypto from 'crypto';
 
-const KEY_HEX = process.env.ENCRYPTION_KEY;
-
-if (!KEY_HEX) {
-  throw new Error('ENCRYPTION_KEY env var is not set. Generate with: node -e "console.log(require("crypto").randomBytes(32).toString("hex"))"');
-}
-
-if (KEY_HEX.length !== 64) {
-  throw new Error(`ENCRYPTION_KEY must be 64 hex chars (32 bytes). Got ${KEY_HEX.length} chars.`);
-}
-
-const KEY = Buffer.from(KEY_HEX, 'hex');
 const ALG = 'aes-256-gcm';
+let _key = null;
+
+function getKey() {
+  if (_key) return _key;
+  const KEY_HEX = process.env.ENCRYPTION_KEY;
+  if (!KEY_HEX) {
+    throw new Error('ENCRYPTION_KEY env var is not set. Generate with: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"');
+  }
+  if (KEY_HEX.length !== 64) {
+    throw new Error(`ENCRYPTION_KEY must be 64 hex chars (32 bytes). Got ${KEY_HEX.length} chars.`);
+  }
+  _key = Buffer.from(KEY_HEX, 'hex');
+  return _key;
+}
 
 /**
  * Encrypt plaintext → return "iv:tag:ciphertext"
@@ -29,6 +32,7 @@ const ALG = 'aes-256-gcm';
  */
 export function encrypt(plaintext) {
   if (!plaintext) return '';
+  const KEY = getKey();
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv(ALG, KEY, iv);
   const enc = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
@@ -49,6 +53,7 @@ export function decrypt(payload) {
     const [ivHex, tagHex, encHex] = parts;
     if (!ivHex || !tagHex || !encHex) return '';
 
+    const KEY = getKey();
     const decipher = crypto.createDecipheriv(ALG, KEY, Buffer.from(ivHex, 'hex'));
     decipher.setAuthTag(Buffer.from(tagHex, 'hex'));
     const dec = Buffer.concat([

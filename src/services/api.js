@@ -58,6 +58,8 @@ export const api = {
   createUser: (data) => request('/users', { method: 'POST', body: JSON.stringify(data) }),
   updateUser: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteUser: (id) => request(`/users/${id}`, { method: 'DELETE' }),
+  getOnlineUsers: (minutes = 5) => request(`/users/online${minutes !== 5 ? `?minutes=${minutes}` : ''}`),
+  forceLogout: (userId) => request(`/users/${userId}/force-logout`, { method: 'POST' }),
 
   // Roles
   getRoles: () => request('/roles'),

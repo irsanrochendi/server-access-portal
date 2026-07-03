@@ -26,8 +26,7 @@ export default function Header({ onMenuClick }) {
       .then(r => r.json()).then(d => { if (d?.filename) setCustomIcon(d.filename); }).catch(() => {});
   }, []);
 
-  const onlineCount = servers.filter(s => s.is_active && s.status === 'online').length;
-  const totalCount = servers.filter(s => s.is_active).length;
+  // Status indicator removed per user request
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -71,19 +70,7 @@ export default function Header({ onMenuClick }) {
             </div>
           </div>
 
-          {/* Status indicator */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full
-            bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10">
-            <span className="relative flex w-2 h-2 items-center justify-center">
-              <span className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-50" />
-              <span className="relative w-full h-full rounded-full bg-emerald-500" />
-            </span>
-            <span className="text-xs text-slate-700 dark:text-white font-medium">
-              {onlineCount} <span className="text-slate-400 dark:text-slate-500">/ {totalCount}</span>
-            </span>
-            <div className="w-px h-3 bg-slate-300 dark:bg-white/10" />
-            <span className="text-xs text-slate-500 dark:text-slate-400">Online</span>
-          </div>
+          {/* Status indicator removed per user request */}
         </div>
 
         {/* Right side actions */}

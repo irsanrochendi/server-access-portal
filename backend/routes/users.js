@@ -13,6 +13,22 @@ router.get('/', (req, res) => {
   res.json({ users });
 });
 
+// GET /api/users/online — list users online (last activity < 5 min)
+router.get('/online', (req, res) => {
+  const db = getDb();
+  const thresholdMinutes = parseInt(req.query.minutes) || 5;
+
+  const users = db.prepare(`
+    SELECT id, name, email, role, division, is_active, last_activity_at,
+           (SELECT COUNT(*) FROM activity_logs WHERE user_id = users.id AND created_at > datetime('now', '-1 hour')) as recent_actions
+    FROM users
+    WHERE last_activity_at > datetime('now', '-' || ? || ' minutes')
+    ORDER BY last_activity_at DESC
+  `).all(thresholdMinutes);
+
+  res.json({ users, count: users.length, threshold: `${thresholdMinutes} minutes` });
+});
+
 // GET /api/users/:id
 router.get('/:id', (req, res) => {
   const user = getDb().prepare('SELECT id, name, username, email, division, role, is_active, theme_preference, created_at FROM users WHERE id = ?').get(req.params.id);
@@ -113,6 +129,24 @@ router.delete('/:id', (req, res) => {
     .run(req.user.id, `User '${user.name}' dihapus`, req.ip);
 
   res.json({ message: 'User dihapus' });
+});
+
+// POST /api/users/:id/force-logout — invalidate all tokens for user
+router.post('/:id/force-logout', (req, res) => {
+  const db = getDb();
+  const user = db.prepare('SELECT id, name FROM users WHERE id = ?').get(req.params.id);
+  if (!user) return res.status(404).json({ error: 'User tidak ditemukan' });
+
+  // Increment token_version to invalidate all existing tokens
+  db.prepare(`UPDATE users SET token_version = COALESCE(token_version, 1) + 1 WHERE id = ?`)
+    .run(req.params.id);
+
+  // Log
+  db.prepare(`INSERT INTO activity_logs (user_id, action, module, description, ip_address, created_at)
+    VALUES (?, 'force_logout', 'auth', ?, ?, datetime('now'))`)
+    .run(req.user.id, `Force logout: ${user.name} (ID ${req.params.id})`, req.ip);
+
+  res.json({ message: `User '${user.name}' akan di-logout pada request berikutnya` });
 });
 
 export default router;

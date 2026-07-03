@@ -29,6 +29,24 @@ const navItems = [
 export default function Sidebar({ open, onClose, collapsed, onToggle }) {
   const { user } = useAuth();
   const [customIcon, setCustomIcon] = useState(null);
+  const [onlineCount, setOnlineCount] = useState(null);
+
+  // Fetch online users count
+  useEffect(() => {
+    const fetchOnlineCount = () => {
+      if (user?.role !== 'admin') return;
+      fetch('/api/users/online', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('portal_token')}` }
+      })
+        .then(r => r.ok ? r.json() : null)
+        .then(d => { if (d?.count !== undefined) setOnlineCount(d.count); })
+        .catch(() => {});
+    };
+
+    fetchOnlineCount();
+    const interval = setInterval(fetchOnlineCount, 30_000);
+    return () => clearInterval(interval);
+  }, [user?.role]);
 
   useEffect(() => {
     fetch('/api/upload/icon', { headers: { Authorization: `Bearer ${localStorage.getItem('portal_token')}` } })
@@ -113,6 +131,33 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
             </NavLink>
           ))}
         </nav>
+
+        {/* Online Users Indicator */}
+        {user?.role === 'admin' && (
+          <div className="px-3 py-2 border-t border-slate-200 dark:border-white/10">
+            <NavLink
+              to="/admin/online-users"
+              onClick={onClose}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+            >
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              {!collapsed && (
+                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                  {onlineCount !== null ? (
+                    onlineCount > 0
+                      ? <>{onlineCount} user online</>
+                      : <>Belum ada yang online</>
+                  ) : (
+                    <>Memuat...</>
+                  )}
+                </span>
+              )}
+            </NavLink>
+          </div>
+        )}
 
         {/* User */}
         <div className="px-3 py-4 border-t border-slate-200 dark:border-white/10">

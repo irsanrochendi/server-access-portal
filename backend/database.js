@@ -150,5 +150,23 @@ export function initDb() {
     d.exec(`ALTER TABLE server_notes ADD COLUMN visible_to TEXT DEFAULT ''`);
   }
 
+  // Migration: add last_activity_at and token_version for Online Users feature
+  const userCols = d.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+  if (!userCols.includes('last_activity_at')) {
+    d.exec(`ALTER TABLE users ADD COLUMN last_activity_at TEXT`);
+  }
+  if (!userCols.includes('token_version')) {
+    d.exec(`ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 1`);
+  }
+  if (!userCols.includes('impersonated_by')) {
+    d.exec(`ALTER TABLE users ADD COLUMN impersonated_by INTEGER REFERENCES users(id) ON DELETE SET NULL`);
+  }
+  if (!userCols.includes('impersonation_expires_at')) {
+    d.exec(`ALTER TABLE users ADD COLUMN impersonation_expires_at TEXT`);
+  }
+
+  // Index for online users query
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity_at)`);
+
   return d;
 }
