@@ -31,10 +31,9 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
   const [customIcon, setCustomIcon] = useState(null);
   const [onlineCount, setOnlineCount] = useState(null);
 
-  // Fetch online users count
+  // Fetch online users count (available for all authenticated users)
   useEffect(() => {
     const fetchOnlineCount = () => {
-      if (user?.role !== 'admin') return;
       fetch('/api/users/online', {
         headers: { Authorization: `Bearer ${localStorage.getItem('portal_token')}` }
       })
@@ -46,7 +45,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
     fetchOnlineCount();
     const interval = setInterval(fetchOnlineCount, 30_000);
     return () => clearInterval(interval);
-  }, [user?.role]);
+  }, []);
 
   useEffect(() => {
     fetch('/api/upload/icon', { headers: { Authorization: `Bearer ${localStorage.getItem('portal_token')}` } })
@@ -133,8 +132,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
         </nav>
 
         {/* Online Users Indicator */}
-        {user?.role === 'admin' && (
-          <div className="px-3 py-2 border-t border-slate-200 dark:border-white/10">
+        <div className="px-3 py-2 border-t border-slate-200 dark:border-white/10">
             <NavLink
               to="/admin/online-users"
               onClick={onClose}
@@ -157,7 +155,6 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
               )}
             </NavLink>
           </div>
-        )}
 
         {/* User */}
         <div className="px-3 py-4 border-t border-slate-200 dark:border-white/10">

@@ -5,6 +5,23 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = Router();
 router.use(authenticate);
+
+// GET /api/users/online — accessible by ALL authenticated users
+router.get('/online', (req, res) => {
+  const db = getDb();
+  const thresholdMinutes = parseInt(req.query.minutes) || 5;
+
+  const users = db.prepare(`
+    SELECT id, name, email, role, division, is_active, last_activity_at
+    FROM users
+    WHERE last_activity_at > datetime('now', '-' || ? || ' minutes')
+    ORDER BY last_activity_at DESC
+  `).all(thresholdMinutes);
+
+  res.json({ users, count: users.length, threshold: `${thresholdMinutes} minutes` });
+});
+
+// Admin-only routes below
 router.use(authorize('admin'));
 
 // GET /api/users — List all
