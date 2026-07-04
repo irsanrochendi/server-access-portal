@@ -3,20 +3,23 @@
 ## v1.3.0 — Online Users Indicator
 
 ### 👥 Online Users (Fitur Baru)
-- **Real-time online users counter** di sidebar (admin only)
+- **Real-time online users counter** di sidebar (semua user)
 - **Auto-refresh 30 detik** — indikator jumlah user yang aktif
 - **Click to view details** — indikator di-click untuk ke halaman detail
-- **Sidebar badge** — menampilkan jumlah user online
-- **Pulse animation** — titik hijau animasi untuk menarik perhatian
+- **Sidebar indicator** — hijau, pulsing, langsung kelihatan
+- **Akses berbeda per role:**
+  - Admin → `/admin/online-users` (dengan Force Logout)
+  - Staff → `/online-users` (view only, tanpa Force Logout)
 
 ### 📊 Online Users Page
-- **Halaman detail** `/admin/online-users` — list semua user online
-- **User cards** — nama, email, role, divisi, last activity, recent actions
-- **Force logout** — invalidasi token user dengan 1 klik
+- **Halaman detail** — list semua user online
+- **User cards** — nama, email, role, divisi, last activity
+- **Force logout** (admin only) — invalidasi token user dengan 1 klik
 - **Auto-revert** — user otomatis offline setelah 5 menit tidak ada aktivitas
 
 ### 🛡️ Activity Tracking
 - **Last activity tracking** — kolom `last_activity_at` di tabel users
+- **Unix timestamp (ms)** — akurat timezone, tidak ambiguity
 - **Token versioning** — force logout invalidate semua token lama
 - **Throttled touch** — update aktivitas max 1x per menit per user
 - **Impersonation support** — kolom `impersonated_by`, `impersonation_expires_at`
@@ -26,19 +29,21 @@
 - **Sidebar online indicator** — hijau, pulsing, langsung kelihatan
 
 ### 🗄️ Database
-- Kolom baru `last_activity_at` (TEXT) — timestamp aktivitas terakhir
+- Kolom baru `last_activity_at` (Unix ms) — timestamp aktivitas terakhir
 - Kolom baru `token_version` (INTEGER) — untuk force logout
 - Kolom baru `impersonated_by` (INTEGER) — untuk impersonation
 - Kolom baru `impersonation_expires_at` (TEXT) — expiry impersonation
 - Index `idx_users_last_activity` — untuk query online users
 
 ### ⚙️ Teknis
-- `GET /api/users/online` — list user online (< 5 menit aktivitas)
-- `POST /api/users/:id/force-logout` — invalidate token
+- `GET /api/users/online` — accessible by all authenticated users
+- `POST /api/users/:id/force-logout` — admin only
 - `middleware/auth.js` — activity touch + token version check
 - `services/auth.js` — token_version di JWT payload
 - Fix route order untuk `/online` vs `/:id`
 - Lazy-load ENCRYPTION_KEY untuk avoid ES module import error
+- Fix duplicate `/online` route yang ngeblok admin routes
+- Fix timestamp timezone dengan Unix ms
 
 ---
 
