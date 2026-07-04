@@ -30,22 +30,6 @@ router.get('/', (req, res) => {
   res.json({ users });
 });
 
-// GET /api/users/online — list users online (last activity < 5 min)
-router.get('/online', (req, res) => {
-  const db = getDb();
-  const thresholdMinutes = parseInt(req.query.minutes) || 5;
-
-  const users = db.prepare(`
-    SELECT id, name, email, role, division, is_active, last_activity_at,
-           (SELECT COUNT(*) FROM activity_logs WHERE user_id = users.id AND created_at > datetime('now', '-1 hour')) as recent_actions
-    FROM users
-    WHERE last_activity_at > datetime('now', '-' || ? || ' minutes')
-    ORDER BY last_activity_at DESC
-  `).all(thresholdMinutes);
-
-  res.json({ users, count: users.length, threshold: `${thresholdMinutes} minutes` });
-});
-
 // GET /api/users/:id
 router.get('/:id', (req, res) => {
   const user = getDb().prepare('SELECT id, name, username, email, division, role, is_active, theme_preference, created_at FROM users WHERE id = ?').get(req.params.id);
