@@ -134,7 +134,7 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
         {/* Online Users Indicator */}
         <div className="px-3 py-2 border-t border-slate-200 dark:border-white/10">
             <NavLink
-              to="/online-users"
+              to={user?.role === 'admin' ? '/admin/online-users' : '/online-users'}
               onClick={onClose}
               className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
             >
