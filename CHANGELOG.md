@@ -1,5 +1,63 @@
 # Changelog — Server Access Portal AST
 
+## v1.5.0 — Health Monitoring & Alerts (2026-07-04)
+
+### 🏥 Health Monitoring System
+- **Background health checker** — auto-check all active servers every 2 minutes
+- **Uptime history tracking** — stores status, latency, errors in `server_uptime_history` table
+- **Server state tracking** — `last_checked_at`, `latency_ms` columns added to servers table
+- **Health API endpoints**:
+  - `GET /api/health/history` — fetch check history (filterable by server, time range)
+  - `GET /api/health/uptime` — uptime percentage, avg/min/max latency stats
+  - `POST /api/health/check/:serverId` — trigger immediate health check
+
+### 🔔 Alert System
+- **Automated alerts** — detects server down, recovery, high latency events
+- **Alert types**: `down` (server unreachable), `recovery` (back online), `latency` (>1000ms)
+- **Alert persistence** — `alerts` table with read/resolved status tracking
+- **Alert API endpoints**:
+  - `GET /api/alerts` — fetch alerts (filter by unread, server)
+  - `PATCH /api/alerts/:id/read` — mark as read
+  - `PATCH /api/alerts/:id/resolve` — mark as resolved
+  - `POST /api/alerts/mark-all-read` — bulk mark all as read
+  - `DELETE /api/alerts/:id` — delete alert
+
+### 🔔 Alert Bell Component
+- **Real-time notification bell** in header with unread count badge
+- **Auto-refresh** every 30 seconds
+- **Dropdown panel** — shows recent alerts with icons (down/recovery/latency)
+- **Actions** — mark as read, delete, mark all as read
+- **Time formatting** — relative timestamps (e.g., "5m ago", "2h ago")
+
+### 📊 Health History Modal
+- **Per-server health dashboard** — accessible via Activity icon in ServerCard
+- **Time range selector** — 7, 14, 30 days
+- **Stats cards**:
+  - Uptime percentage
+  - Total checks performed
+  - Average latency
+  - Offline count
+- **History table** — chronological list of all checks with status, latency, errors
+- **Glassmorphism design** — matches v1.4.0 UI style
+
+### 🗄️ Database Migrations
+- **`server_uptime_history` table** — stores historical health checks
+- **`alerts` table** — stores notifications with read/resolved tracking
+- **`servers` columns** — added `last_checked_at`, `latency_ms`
+- **Indexes** — optimized queries on `server_id + checked_at`, `is_read + is_resolved`
+
+### 🔧 Backend Services
+- **`healthCheck.js`** — background service with 2-min interval
+- **Auto-start** — health checker starts with backend server
+- **Smart alerting** — only creates alerts on state transitions (online→offline, recovery, latency spikes)
+
+### 🎨 UI Enhancements
+- **ServerCard** — added Activity button for health history modal
+- **Header** — integrated AlertBell component between theme toggle and user dropdown
+- **Responsive design** — modal works on mobile/tablet
+
+---
+
 ## v1.4.0 — UI Redesign (Glassmorphism & Modernization)
 
 ### 🎨 UI Redesign — Full Visual Overhaul

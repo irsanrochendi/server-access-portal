@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Server, ExternalLink, Copy, Globe, Shield, Terminal, Monitor, Cpu, Activity, Lock } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { api } from '../services/api';
+import HealthHistoryModal from './HealthHistoryModal';
 
 function field(s, k1, k2) { return s[k1] ?? s[k2]; }
 
@@ -28,6 +29,7 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
   const [latency, setLatency] = useState(null);
   const [pinging, setPinging] = useState(false);
   const [pingError, setPingError] = useState(null);
+  const [showHealthModal, setShowHealthModal] = useState(false);
 
   const name = field(server, 'name', 'name');
   const ipAddress = field(server, 'ip_address', 'ipAddress');
@@ -192,6 +194,16 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
             <Lock className="w-4 h-4" />
           </button>
           <button
+            onClick={() => setShowHealthModal(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl
+              bg-indigo-100 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400
+              hover:bg-indigo-200 dark:hover:bg-indigo-500/20 hover:border-indigo-300 dark:hover:border-indigo-500/30
+              text-xs font-semibold transition-all duration-300 active:scale-95 shadow-sm"
+            title="Health History"
+          >
+            <Activity className="w-4 h-4" />
+          </button>
+          <button
             onClick={() => { navigator.clipboard.writeText(ipAddress); onCopyIp?.(ipAddress); }}
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl
               bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300
@@ -209,6 +221,10 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
         </div>
       </div>
 
+      {/* Health History Modal */}
+      {showHealthModal && (
+        <HealthHistoryModal server={server} onClose={() => setShowHealthModal(false)} />
+      )}
     </div>
   );
 }

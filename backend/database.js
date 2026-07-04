@@ -168,5 +168,44 @@ export function initDb() {
   // Index for online users query
   d.exec(`CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity_at)`);
 
+  // ─── v1.5.0: Health Monitoring ───────────────────────────────────────────
+  // server_uptime_history: stores each health check result over time
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS server_uptime_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
+      status TEXT NOT NULL CHECK(status IN ('online','offline','unknown')),
+      latency_ms INTEGER,
+      error TEXT,
+      checked_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_uptime_server_time ON server_uptime_history(server_id, checked_at)`);
+
+  // alerts: server-down and recovery notifications
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS alerts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
+      type TEXT NOT NULL CHECK(type IN ('down','recovery','latency')),
+      message TEXT NOT NULL,
+      is_read INTEGER NOT NULL DEFAULT 0,
+      is_resolved INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      resolved_at TEXT
+    );
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_unread ON alerts(is_read, is_resolved, created_at DESC)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_server ON alerts(server_id, created_at DESC)`);
+
+  // Migration: add last_checked_at if missing
+  const serverCols = d.prepare("PRAGMA table_info(servers)").all().map(c => c.name);
+  if (!serverCols.includes('last_checked_at')) {
+    d.exec(`ALTER TABLE servers ADD COLUMN last_checked_at TEXT`);
+  }
+  if (!serverCols.includes('latency_ms')) {
+    d.exec(`ALTER TABLE servers ADD COLUMN latency_ms INTEGER`);
+  }
+
   return d;
 }

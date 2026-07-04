@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useServers } from "../contexts/ServerContext";
+import AlertBell from './AlertBell';
 
 export default function Header({ onMenuClick }) {
   const { theme, toggleTheme } = useTheme();
@@ -94,6 +95,9 @@ export default function Header({ onMenuClick }) {
           >
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>
+
+          {/* Alert Bell */}
+          <AlertBell />
 
           {/* User dropdown */}
           <div className="relative ml-2" ref={ref}>
