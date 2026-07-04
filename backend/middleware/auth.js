@@ -44,7 +44,8 @@ export function authenticate(req, res, next) {
     // Activity touch — throttled to max 1 update per minute per user
     const lastTouch = _activityTouch.get(currentUser.id);
     if (!lastTouch || Date.now() - lastTouch > 60_000) {
-      db.prepare(`UPDATE users SET last_activity_at = datetime('now') WHERE id = ?`).run(currentUser.id);
+      // Use Unix timestamp (milliseconds) for accurate timezone handling
+      db.prepare(`UPDATE users SET last_activity_at = ? WHERE id = ?`).run(Date.now(), currentUser.id);
       _activityTouch.set(currentUser.id, Date.now());
     }
 

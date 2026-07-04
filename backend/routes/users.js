@@ -10,13 +10,15 @@ router.use(authenticate);
 router.get('/online', (req, res) => {
   const db = getDb();
   const thresholdMinutes = parseInt(req.query.minutes) || 5;
+  const thresholdMs = Date.now() - (thresholdMinutes * 60 * 1000);
 
+  // Use Unix timestamp for accurate timezone handling
   const users = db.prepare(`
     SELECT id, name, email, role, division, is_active, last_activity_at
     FROM users
-    WHERE last_activity_at > datetime('now', '-' || ? || ' minutes')
+    WHERE last_activity_at > ?
     ORDER BY last_activity_at DESC
-  `).all(thresholdMinutes);
+  `).all(thresholdMs);
 
   res.json({ users, count: users.length, threshold: `${thresholdMinutes} minutes` });
 });
