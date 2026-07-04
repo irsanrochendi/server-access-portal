@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Wifi, WifiOff, User, Shield, Clock } from 'lucide-react';
-import { api } from '../../services/api';
+import { api } from '../services/api';
 
 export default function OnlineUsers() {
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -28,7 +28,11 @@ export default function OnlineUsers() {
 
   const formatLastActivity = (timestamp) => {
     if (!timestamp) return 'Baru saja';
-    const diff = Date.now() - new Date(timestamp).getTime();
+    // Handle both Unix timestamp (ms) and string date
+    const ts = typeof timestamp === 'number' ? timestamp : parseInt(timestamp);
+    if (isNaN(ts)) return 'Baru saja';
+    const diff = Date.now() - ts;
+    if (diff < 0 || diff > 7 * 24 * 60 * 60 * 1000) return 'Baru saja';
     const seconds = Math.floor(diff / 1000);
     if (seconds < 60) return `${seconds}s lalu`;
     const minutes = Math.floor(seconds / 60);
