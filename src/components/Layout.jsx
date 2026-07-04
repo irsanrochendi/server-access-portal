@@ -8,7 +8,7 @@ export default function Layout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-[#090d16]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:bg-gradient-to-br dark:from-[#0a0e1a] dark:via-[#0f1729] dark:to-[#0a0e1a]">
       <div className="flex">
         <Sidebar
           open={sidebarOpen}
@@ -17,10 +17,10 @@ export default function Layout() {
           onToggle={() => setSidebarCollapsed(prev => !prev)}
         />
         <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${
-          sidebarCollapsed ? 'lg:ml-[72px]' : 'lg:ml-[252px]'
+          sidebarCollapsed ? 'lg:ml-[100px]' : 'lg:ml-[272px]'
         }`}>
           <Header onMenuClick={() => setSidebarOpen(true)} />
-          <main className="flex-1 p-4 lg:p-6 pt-4">
+          <main className="flex-1 p-4 lg:p-8 pt-6 pb-12">
             <Outlet />
           </main>
         </div>

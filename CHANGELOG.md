@@ -1,5 +1,55 @@
 # Changelog — Server Access Portal AST
 
+## v1.4.0 — UI Redesign (Glassmorphism & Modernization)
+
+### 🎨 UI Redesign — Full Visual Overhaul
+- **Glassmorphism theme** — backdrop-blur, translucent backgrounds di sidebar, header, cards, login
+- **Gradient accents** — indigo→purple→pink gradients pada buttons, icons, avatar badges
+- **Micro-interactions** — glow, float, scale animations pada hover/active states
+- **Bolder typography** — font-black/font-bold vs font-medium, tighter tracking
+- **Enhanced shadows** — colored shadows (indigo, emerald, red), larger blur radius
+
+### 📊 Dashboard
+- **KPI cards** — glass-card style, gradient icon backgrounds, hover lift + shadow
+- **Health bar** — larger sizing, gradient progress fill
+- **Search & filters** — solid bg (no glass on form elements), custom chevron arrow, better focus states
+- **Header** — larger gradient text, enhanced online badge with ping animation
+
+### 🖥️ ServerCard
+- **Glass card** — backdrop-blur, gradient top accent animated on hover
+- **Gradient icon backgrounds** — glow shadows, bolder CTAs
+- **Connection info** — gradient backgrounds, enhanced latency badges
+
+### 🔑 Login
+- **Animated floating orbs** — gradient background decorations
+- **Glass card form** — thicker borders, gradient submit button
+- **Enhanced inputs** — ring focus states, glass effect
+
+### 📋 Sidebar
+- **Glass sidebar** — rounded-3xl, glass-card with backdrop-blur
+- **Gradient logo** — glow animation, centered when collapsed
+- **Nav items** — gradient backgrounds (indigo→purple) on active, centered icons when collapsed
+- **User profile** — centered avatar when collapsed, gradient background
+- **Online indicator** — gradient + glow badge
+
+### 🏠 Header
+- **Glassmorphism** — backdrop-blur, translucent background
+- **Colored hover** — indigo refresh, amber theme toggle
+- **User dropdown** — gradient header section, glass-card menu
+
+### 🐛 Bug Fixes
+- **Filter dropdowns** — replaced broken `glass` class on `<select>`/`<input>` with solid `bg-white dark:bg-white/10`
+- **Sidebar collision** — fixed layout margin overlap (sidebar ↔ header) with proper gap (20px expanded, 16px collapsed)
+- **Nav icons** — centered in background when sidebar collapsed (justify-center + px-2)
+- **User avatar** — centered in background when sidebar collapsed (justify-center + p-2)
+- **Logo icon** — centered in sidebar when collapsed (ml-1 offset adjustment)
+
+### 🔧 Layout
+- **Layout spacing** — `lg:ml-[272px]` expanded, `lg:ml-[100px]` collapsed (20px/16px gap from sidebar)
+- **Main padding** — `pb-12` for better bottom spacing
+
+---
+
 ## v1.3.0 — Online Users Indicator
 
 ### 👥 Online Users (Fitur Baru)

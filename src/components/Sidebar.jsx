@@ -63,66 +63,79 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
       )}
 
       <aside
-        className={`fixed top-3 left-3 z-40 h-[calc(100vh-24px)] flex flex-col rounded-2xl transition-all duration-300 ease-out
+        className={`fixed top-3 left-3 z-40 h-[calc(100vh-24px)] flex flex-col rounded-3xl transition-all duration-300 ease-out
           ${open ? "translate-x-0" : "-translate-x-full"}
           lg:translate-x-0
           ${collapsed ? "w-[72px]" : "w-[240px]"}
-          /* Light mode */
-          bg-white border border-slate-200 shadow-lg
-          /* Dark mode */
-          dark:bg-[#0d1321] dark:border-white/10 dark:shadow-none`}
+          glass-card shadow-2xl`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between px-4 h-16 border-b border-slate-200 dark:border-white/10">
-          <NavLink to="/dashboard" className="flex items-center gap-3">
+        <div className={`flex items-center border-b border-slate-200/50 dark:border-white/10 h-16
+          ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+          <NavLink to="/dashboard" className={`flex items-center ${collapsed ? 'ml-1' : 'gap-3'}`}>
             {/* Logo Icon */}
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center shadow-xl shadow-indigo-500/40 shrink-0 animate-glow">
               {customIcon ? (
-                <img src={`/uploads/${customIcon}`} className="w-5 h-5 rounded-lg" alt="" />
+                <img src={`/uploads/${customIcon}`} className="w-6 h-6 object-contain" alt="" />
               ) : (
-                <Orbit className="w-5 h-5 text-white" />
+                <Orbit className="w-6 h-6 text-white" />
               )}
             </div>
 
             {!collapsed && (
               <div className="flex flex-col">
-                <span className="text-sm font-bold text-slate-900 dark:text-white tracking-tight">Portal AST</span>
-                <span className="text-[10px] text-slate-500 font-medium flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-indigo-600 dark:text-indigo-400/70" />
+                <span className="text-sm font-black gradient-text tracking-tight">Portal AST</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-amber-500" />
                   Server Control
                 </span>
               </div>
             )}
           </NavLink>
 
-          <div className="flex items-center gap-1">
-            <button
-              onClick={onClose}
-              className="lg:hidden p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white transition-all"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <button
-              onClick={onToggle}
-              className="hidden lg:flex w-7 h-7 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white transition-all duration-200 active:scale-95"
-            >
-              {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </button>
-          </div>
+          {!collapsed && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onClose}
+                className="lg:hidden p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all active:scale-95"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <button
+                onClick={onToggle}
+                className="hidden lg:flex w-8 h-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all duration-300 active:scale-95"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* Collapse toggle (when sidebar is collapsed) */}
+        {collapsed && (
+          <div className="flex justify-center py-1">
+            <button
+              onClick={onToggle}
+              className="flex w-8 h-8 items-center justify-center rounded-xl hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all duration-300 active:scale-95"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-4 px-3 space-y-1.5 overflow-y-auto">
           {navItems.filter(item => item.role.includes(user?.role || "staff")).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               onClick={onClose}
               className={({ isActive }) =>
-                `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200
+                `group flex items-center py-3 rounded-xl text-sm font-bold transition-all duration-300
+                ${collapsed ? 'justify-center px-2' : 'gap-3 px-4'}
                 ${isActive
-                  ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 hover:text-slate-900 dark:hover:bg-white/5 dark:hover:text-white"}`
+                  ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white hover:shadow-md"}`
               }
             >
               <item.icon className="w-5 h-5 shrink-0" />
@@ -132,24 +145,26 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
         </nav>
 
         {/* Online Users Indicator */}
-        <div className="px-3 py-2 border-t border-slate-200 dark:border-white/10">
+        <div className="px-3 py-3 border-t border-slate-200/50 dark:border-white/10">
             <NavLink
               to={user?.role === 'admin' ? '/admin/online-users' : '/online-users'}
               onClick={onClose}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-500/15 dark:to-green-500/15
+                hover:from-emerald-200 hover:to-green-200 dark:hover:from-emerald-500/25 dark:hover:to-green-500/25
+                border border-emerald-300/50 dark:border-emerald-500/30 transition-all duration-300 shadow-sm hover:shadow-md active:scale-95"
             >
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 shadow-lg shadow-emerald-500/50"></span>
               </span>
               {!collapsed && (
-                <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
                   {onlineCount !== null ? (
                     onlineCount > 0
                       ? <>{onlineCount} user online</>
-                      : <>Belum ada yang online</>
+                      : <>No users online</>
                   ) : (
-                    <>Memuat...</>
+                    <>Loading...</>
                   )}
                 </span>
               )}
@@ -157,19 +172,21 @@ export default function Sidebar({ open, onClose, collapsed, onToggle }) {
           </div>
 
         {/* User */}
-        <div className="px-3 py-4 border-t border-slate-200 dark:border-white/10">
-          <div className="flex items-center gap-3 p-2 rounded-xl bg-slate-50 dark:bg-white/5">
+        <div className="px-3 py-4 border-t border-slate-200/50 dark:border-white/10">
+          <div className={`flex items-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-white/5 dark:to-white/10 border border-slate-200 dark:border-white/10 shadow-sm
+            ${collapsed ? 'justify-center p-2' : 'gap-3 p-3'}`}>
             {/* Avatar */}
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
-              <span className="text-xs font-bold text-white">
+            <div className={`rounded-xl bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0
+              ${collapsed ? 'w-9 h-9' : 'w-10 h-10'}`}>
+              <span className={`font-black text-white ${collapsed ? 'text-xs' : 'text-sm'}`}>
                 {user?.name?.charAt(0)?.toUpperCase() || 'U'}
               </span>
             </div>
 
             {!collapsed && (
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">{user?.name}</p>
-                <p className="text-[10px] text-indigo-600 dark:text-indigo-400/70 font-medium uppercase tracking-wider">
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user?.name}</p>
+                <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest">
                   {user?.role}
                 </p>
               </div>

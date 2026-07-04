@@ -88,30 +88,29 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
 
   return (
     <div
-      className={`group bg-white dark:bg-[#0d1321] rounded-2xl border border-slate-200 dark:border-white/10
-        shadow-sm hover:shadow-md dark:shadow-none
-        overflow-hidden transition-all duration-300 ease-out
-        hover:border-indigo-300 dark:hover:border-indigo-500/30 hover:-translate-y-0.5 animate-fade-in`}
+      className={`group glass-card rounded-2xl overflow-hidden transition-all duration-500 ease-out
+        hover:shadow-xl hover:shadow-indigo-500/10 dark:hover:shadow-indigo-500/5
+        hover:-translate-y-1 hover:scale-[1.02] animate-fade-in`}
       style={{ animationDelay: `${index * 50}ms` }}
     >
-      {/* Top accent line */}
-      <div className={`h-0.5 bg-gradient-to-r ${isOnline ? 'from-emerald-500 to-emerald-400' : 'from-slate-400 to-slate-300 dark:from-slate-500 dark:to-slate-400'}`} />
+      {/* Top accent line with gradient */}
+      <div className={`h-1 bg-gradient-to-r ${isOnline ? 'from-emerald-400 via-green-500 to-emerald-400' : 'from-slate-300 via-slate-400 to-slate-300 dark:from-slate-600 dark:via-slate-500 dark:to-slate-600'}`} />
 
-      <div className="p-4">
+      <div className="p-5">
         {/* Header: Environment badge + Status */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${envStyle.bg} ${envStyle.text}`}>
-              <span className="opacity-70">{envStyle.icon}</span>
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded-full ${envStyle.bg} ${envStyle.text} shadow-sm`}>
+              <span className="opacity-80">{envStyle.icon}</span>
               {environment}
             </span>
             {isSSH && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-cyan-100 dark:bg-cyan-500/15 text-cyan-700 dark:text-cyan-400">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-cyan-100 dark:bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 shadow-sm">
                 <Terminal className="w-3 h-3" /> SSH
               </span>
             )}
             {isRDP && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-full bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 shadow-sm">
                 <Monitor className="w-3 h-3" /> RDP
               </span>
             )}
@@ -120,93 +119,93 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
         </div>
 
         {/* Server Info with Icon */}
-        <div className="flex items-start gap-3 mb-4">
-          <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center shrink-0">
-            <Server className={`w-5 h-5 ${isOnline ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}`} />
+        <div className="flex items-start gap-4 mb-5">
+          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all duration-300 ${isOnline ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30' : 'bg-slate-200 dark:bg-slate-700'}`}>
+            <Server className={`w-7 h-7 ${isOnline ? 'text-white' : 'text-slate-400'}`} />
           </div>
-          <div className="min-w-0 flex-1 pt-0.5">
-            <h3 className="font-semibold text-slate-900 dark:text-white text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          <div className="min-w-0 flex-1 pt-1">
+            <h3 className="font-bold text-slate-900 dark:text-white text-base truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
               {name}
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-              <Cpu className="w-3 h-3 opacity-60" />
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 opacity-60" />
               {category || 'Server'}
             </p>
           </div>
         </div>
 
         {/* Connection Info */}
-        <div className={`rounded-xl p-3 mb-3 ${isOnline ? 'bg-indigo-50 dark:bg-indigo-500/10' : 'bg-slate-50 dark:bg-slate-500/10'}`}>
-          <div className="flex items-center justify-between mb-1">
+        <div className={`rounded-xl p-4 mb-4 transition-all duration-300 ${isOnline ? 'bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-500/10 dark:to-purple-500/10' : 'bg-slate-50 dark:bg-slate-800/50'}`}>
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Globe className={`w-3.5 h-3.5 ${isOnline ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`} />
-              <span className={`text-[11px] font-medium ${isOnline ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}`}>
+              <Globe className={`w-4 h-4 ${isOnline ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400'}`} />
+              <span className={`text-xs font-semibold ${isOnline ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500'}`}>
                 {isOnline ? 'Connected' : 'Disconnected'}
               </span>
             </div>
             {/* Latency */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               {latency !== null && (
-                <span className={`text-[11px] font-mono font-semibold ${latencyColor}`}>
-                  {latency}<span className="text-[9px] font-normal">ms</span>
+                <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${latencyColor} bg-white/50 dark:bg-black/20`}>
+                  {latency}<span className="text-[10px] font-normal opacity-70">ms</span>
                 </span>
               )}
               <Activity
-                className={`w-3.5 h-3.5 text-slate-400 dark:text-slate-500 ${latency === null && !pingError ? 'animate-pulse' : ''}`}
+                className={`w-4 h-4 text-slate-400 dark:text-slate-500 ${latency === null && !pingError ? 'animate-pulse' : ''}`}
               />
             </div>
           </div>
-          <p className="font-mono text-[13px] text-slate-700 dark:text-white/80 truncate pl-5">{displayUrl}</p>
+          <p className="font-mono text-sm text-slate-700 dark:text-white/90 truncate pl-6">{displayUrl}</p>
           {pingError && latency === null && (
-            <p className="text-[10px] text-red-500 dark:text-red-400 mt-1 pl-5">⚠ {pingError}</p>
+            <p className="text-[10px] text-red-500 dark:text-red-400 mt-1.5 pl-6 font-medium">⚠ {pingError}</p>
           )}
         </div>
 
         {/* Description */}
         {description && (
-          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 mb-4 leading-relaxed">{description}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 mb-5 leading-relaxed px-1">{description}</p>
         )}
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-3 border-t border-slate-200 dark:border-white/10">
+        <div className="flex items-center gap-2 pt-4 border-t border-slate-200/80 dark:border-white/10">
           <button
             onClick={() => openServer(server)}
-            className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs
-              transition-all duration-200 active:scale-[0.98] shadow-sm
+            className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-xs
+              transition-all duration-300 active:scale-95 shadow-md
               ${isOnline
-                ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-500/25 hover:shadow-indigo-500/40'
-                : 'bg-slate-200 dark:bg-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-indigo-500/30 hover:shadow-indigo-500/50'
+                : 'bg-slate-200 dark:bg-slate-700/50 text-slate-400 dark:text-slate-500 cursor-not-allowed shadow-none'
               }`}
             disabled={!isOnline}
           >
-            {isSSH ? <Terminal className="w-3.5 h-3.5" /> : isRDP ? <Monitor className="w-3.5 h-3.5" /> : <ExternalLink className="w-3.5 h-3.5" />}
+            {isSSH ? <Terminal className="w-4 h-4" /> : isRDP ? <Monitor className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
             {isSSH ? 'Open SSH' : isRDP ? 'Open RDP' : 'Open Server'}
           </button>
           <button
             onClick={() => onShowNotes?.(server)}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl
-              bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400
-              hover:bg-amber-50 dark:hover:bg-amber-500/10 hover:text-amber-600 dark:hover:text-amber-400
-              text-xs font-medium transition-all duration-200 active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl
+              bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400
+              hover:bg-amber-200 dark:hover:bg-amber-500/20 hover:border-amber-300 dark:hover:border-amber-500/30
+              text-xs font-semibold transition-all duration-300 active:scale-95 shadow-sm"
             title="Catatan & Kredensial"
           >
-            <Lock className="w-3.5 h-3.5" />
+            <Lock className="w-4 h-4" />
           </button>
           <button
             onClick={() => { navigator.clipboard.writeText(ipAddress); onCopyIp?.(ipAddress); }}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl
-              bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400
-              hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-700 dark:hover:text-white
-              text-xs font-medium transition-all duration-200 active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl
+              bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300
+              hover:bg-slate-200 dark:hover:bg-white/10 hover:text-slate-800 dark:hover:text-white
+              text-xs font-semibold transition-all duration-300 active:scale-95 shadow-sm"
           >
-            <Copy className="w-3.5 h-3.5" />
+            <Copy className="w-4 h-4" />
           </button>
         </div>
 
         {/* Footer: Security badge */}
-        <div className="flex items-center justify-center gap-1.5 mt-3 py-1.5 px-2 rounded-lg bg-amber-50 dark:bg-amber-500/10">
-          <Shield className="w-3 h-3 text-amber-500 dark:text-amber-400/70" />
-          <span className="text-[10px] text-amber-600 dark:text-amber-400/70 font-medium">Intranet Only</span>
+        <div className="flex items-center justify-center gap-2 mt-4 py-2 px-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 border border-amber-200/50 dark:border-amber-500/20">
+          <Shield className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold tracking-wide">Intranet Only</span>
         </div>
       </div>
 
