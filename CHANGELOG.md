@@ -1,5 +1,71 @@
 # Changelog — Server Access Portal AST
 
+## v1.7.0 — Server Grouping (2026-07-04)
+
+### 📁 Server Groups
+- **Group management** — organize servers into logical groups
+- **Group properties** — name, description, color, icon
+- **Many-to-many relationships** — servers can belong to multiple groups
+- **Group API endpoints**:
+  - `GET /api/groups` — list all groups with server counts
+  - `GET /api/groups/:id` — get group with members
+  - `POST /api/groups` — create new group
+  - `PATCH /api/groups/:id` — update group
+  - `DELETE /api/groups/:id` — delete group (cascade removes members)
+  - `POST /api/groups/:id/members` — add server to group
+  - `DELETE /api/groups/:id/members/:serverId` — remove server from group
+  - `GET /api/groups/server/:serverId` — get all groups a server belongs to
+
+### 🎨 Server Groups UI
+- **Groups page** (`/groups`) — grid view of all groups with server counts
+- **Create/Edit modal** — form with name, description, color picker
+- **Group details modal** — shows all servers in group
+- **Remove servers** — from group details modal
+- **Color-coded cards** — custom color for each group icon
+- **Sidebar navigation** — new "Groups" link with folder icon
+
+### 🗄️ Database Schema
+- **`server_groups` table** — stores group metadata
+- **`server_group_members` table** — junction table for many-to-many relationship
+- **Indexes** — optimized queries on `group_id`, `server_id`
+- **Cascade deletes** — removing group deletes memberships, not servers
+
+---
+
+## v1.6.0 — Quick Connect & Connection History (2026-07-04)
+
+### ⚡ Quick Connect
+- **Keyboard shortcut** — Ctrl+K / Cmd+K opens quick connect modal
+- **Recent servers** — shows last 10 accessed servers with frecency scoring
+- **Frecency algorithm** — frequency + recency weighted by exponential decay
+- **Search filter** — search by name, IP, category
+- **One-click connect** — select server to connect immediately
+- **Connection logging** — tracks every server access with timestamp
+- **Connection stats** — shows connection count & last connected time
+
+### 📜 Connection History
+- **History page** (`/connection-history`) — full chronological log of connections
+- **Stats cards**:
+  - Total connections count
+  - Unique servers count
+  - Current page count
+- **History table** — shows time, server, IP, environment, category, status
+- **Pagination** — 50 entries per page with prev/next controls
+- **Time formatting** — human-readable timestamps (MMM DD, YYYY HH:MM)
+- **Sidebar navigation** — new "History" link with clock icon
+
+### 🗄️ Database Schema
+- **`connection_logs` table** — stores connection events
+- **Indexes** — optimized queries on `user_id + server_id + connected_at`
+- **Auto-logging** — every `openServer()` call logs to backend
+
+### 🔌 API Endpoints
+- **`POST /api/connections/log`** — log connection event
+- **`GET /api/connections/recent`** — get recent servers with frecency score (limit param)
+- **`GET /api/connections/history`** — get full history with pagination (limit, offset params)
+
+---
+
 ## v1.5.0 — Health Monitoring & Alerts (2026-07-04)
 
 ### 🏥 Health Monitoring System

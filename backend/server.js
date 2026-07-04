@@ -27,6 +27,8 @@ import uploadRoutes from './routes/upload.js';
 import notesRoutes from './routes/notes.js';
 import healthRoutes from './routes/health.js';
 import alertRoutes from './routes/alerts.js';
+import connectionRoutes from './routes/connections.js';
+import groupRoutes from './routes/groups.js';
 import { initBackupSettings } from './services/backup.js';
 import { startAutoBackup } from './services/autoBackupScheduler.js';
 import { startHealthChecker } from './services/healthCheck.js';
@@ -64,6 +66,8 @@ app.use('/api/backup', backupRoutes);
 app.use('/api/server-notes', notesRoutes);  // /api/server-notes/:id/notes/*
 app.use('/api/health', healthRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/connections', connectionRoutes);
+app.use('/api/groups', groupRoutes);
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();

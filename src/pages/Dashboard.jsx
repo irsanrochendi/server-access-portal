@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Wifi, WifiOff, HelpCircle, RefreshCw, Server, Activity, Zap } from 'lucide-react';
 import ServerCard from '../components/ServerCard';
 import ServerNotesModal from '../components/ServerNotesModal';
+import QuickConnectModal from '../components/QuickConnectModal';
 import EmptyState from '../components/EmptyState';
 import { useServers } from '../contexts/ServerContext';
 import { useToast } from '../contexts/ToastContext';
@@ -13,6 +14,7 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilters, setActiveFilters] = useState({});
   const [notesServer, setNotesServer] = useState(null);
+  const [showQuickConnect, setShowQuickConnect] = useState(false);
   const activeServers = useMemo(() => servers.filter(s => s.is_active), [servers]);
 
   const filtered = useMemo(() => {
@@ -36,6 +38,18 @@ export default function Dashboard() {
     try { await refreshStatus(); toast.success('Status diperbarui'); } catch (e) { toast.error(e.message); }
     setTimeout(() => setRefreshing(false), 600);
   };
+
+  // Ctrl+K / Cmd+K quick connect
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setShowQuickConnect(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const healthPercent = stats.total > 0 ? Math.round((stats.online / stats.total) * 100) : 0;
 
@@ -241,6 +255,11 @@ export default function Dashboard() {
           onSave={() => setNotesServer(null)}
         />
       )}
+
+      <QuickConnectModal
+        isOpen={showQuickConnect}
+        onClose={() => setShowQuickConnect(false)}
+      />
     </div>
   );
 }

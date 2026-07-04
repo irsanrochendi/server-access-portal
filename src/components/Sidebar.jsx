@@ -12,12 +12,16 @@ import {
   ChevronRight,
   X,
   Orbit,
-  Sparkles
+  Sparkles,
+  Clock,
+  Folder
 } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 
 const navItems = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Dashboard", role: ["admin", "staff"] },
+  { to: "/connection-history", icon: Clock, label: "History", role: ["admin", "staff"] },
+  { to: "/groups", icon: Folder, label: "Groups", role: ["admin", "staff"] },
   { to: "/admin/servers", icon: Server, label: "Servers", role: ["admin"] },
   { to: "/admin/users", icon: Users, label: "Users", role: ["admin"] },
   { to: "/admin/roles", icon: ShieldCheck, label: "Roles", role: ["admin"] },

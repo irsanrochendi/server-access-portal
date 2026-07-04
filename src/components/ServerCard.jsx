@@ -22,6 +22,14 @@ async function openServer(server) {
       method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
     });
     if (!r.ok) alert((await r.json()).error || 'Gagal');
+
+    // Log connection
+    const authToken = localStorage.getItem('token');
+    await fetch('http://localhost:4000/api/connections/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+      body: JSON.stringify({ serverId: server.id }),
+    }).catch(err => console.error('Failed to log connection:', err));
   } catch (e) { alert('Gagal: ' + e.message); }
 }
 

@@ -207,5 +207,40 @@ export function initDb() {
     d.exec(`ALTER TABLE servers ADD COLUMN latency_ms INTEGER`);
   }
 
+  // ─── v1.6.0: Quick Connect & Connection History ──────────────────────────
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS connection_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      connected_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_connection_logs_user_server ON connection_logs(user_id, server_id, connected_at DESC)`);
+
+  // ─── v1.7.0: Server Grouping ──────────────────────────────────────────────
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS server_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      color TEXT DEFAULT '#6366f1',
+      icon TEXT DEFAULT 'folder',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS server_group_members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      group_id INTEGER NOT NULL REFERENCES server_groups(id) ON DELETE CASCADE,
+      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
+      UNIQUE(group_id, server_id)
+    )
+  `);
+
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_group_members_group ON server_group_members(group_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_group_members_server ON server_group_members(server_id)`);
+
   return d;
 }
