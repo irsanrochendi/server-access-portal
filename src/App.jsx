@@ -7,7 +7,8 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import AdminServers from './pages/admin/AdminServers';
 import AdminUsers from './pages/admin/AdminUsers';
-import OnlineUsers from './pages/admin/OnlineUsers';
+import OnlineUsersAdmin from './pages/admin/OnlineUsers';
+import OnlineUsers from './pages/OnlineUsers';
 import ActivityLogs from './pages/admin/ActivityLogs';
 import AdminRoles from './pages/admin/AdminRoles';
 import DbBrowser from './pages/admin/DbBrowser';
@@ -33,6 +34,7 @@ function App() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/online-users" element={<OnlineUsers />} />
 
         {/* Admin routes */}
         <Route
@@ -55,7 +57,7 @@ function App() {
           path="/admin/online-users"
           element={
             <ProtectedRoute roles={['admin']}>
-              <OnlineUsers />
+              <OnlineUsersAdmin />
             </ProtectedRoute>
           }
         />
