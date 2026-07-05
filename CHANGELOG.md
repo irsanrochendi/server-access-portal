@@ -1,6 +1,6 @@
 # Changelog — Server Access Portal AST
 
-## v2.0.0 — Portal Refactor & Activity Logging (2026-07-05)
+## v2.1.0 — Portal Refactor & Activity Logging (2026-07-05)
 
 ### 🔐 Built-in Credential Management
 - **Inline credential reveal** — Lock icon di setiap server card untuk lihat credentials
