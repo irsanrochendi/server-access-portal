@@ -1,6 +1,6 @@
 # Changelog — Server Access Portal AST
 
-## v2.0.0 — Portal Refactor & Activity Logging (2026-07-05)
+## v2.1.0 — Portal Refactor & Activity Logging (2026-07-05)
 
 ### 🔐 Built-in Credential Management
 - **Inline credential reveal** — Lock icon di setiap server card untuk lihat credentials
@@ -32,6 +32,63 @@
 ### ⚠️ Breaking Changes
 - **Server Notes & Health features removed** — upgrade memerlukan pengecekan kompatibilitas
 - **Connection history tidak tersedia** — data lama tidak bisa diakses
+
+---
+
+## v2.0.0 — Resource Gateway & Full Dashboard Redesign (2026-07-05)
+
+### 🧹 Feature Cleanup (Task 1-3)
+- **Hapus Health Monitoring & Alerts** — hapus `routes/health.js`, `routes/alerts.js`, `AlertBell.jsx`, `HealthHistoryModal.jsx`, tabel `server_uptime_history` & `alerts` dari DB
+- **Hapus Server Notes** — hapus `ServerNotesModal.jsx`, `ServerNotesLogModal.jsx`, `routes/notes.js`
+- **Hapus Connection History** — hapus `ConnectionHistory.jsx`, `routes/connections.js`, tabel `connection_logs`
+
+### 🔐 Resource Gateway — Merge ke Server
+- **Tambah kolom credential** — `shared_username`, `shared_password_encrypted`, `auto_login_enabled` di tabel `servers`
+- **Tabel baru `server_assignments`** — untuk assign server ke user/role
+- **Hapus Resource concept** — hapus `ResourceContext`, `ResourceCard`, `ResourceGrid`, `ResourceManager`, `routes/resources.js`
+- **Credential endpoints** — `GET /api/servers/:id/credentials`, assignment CRUD
+- **AES-256 encryption** — password server terenkripsi di database
+- **Auto-login helper** — inject credentials ke URL/RDP saat buka server
+
+### 🚀 Dashboard Dual-Mode + Card Redesign
+- **Staff view** — grid server cards dengan credential reveal, copy, dan ping
+- **Admin view** — server cards modern dengan gradient glow, ping badge, credential lock
+- **Ping latency** — auto-fetch ping tiap server dengan warna: hijau <100ms, kuning 100–300ms, merah >300ms
+- **Filter dropdowns** — filter by category & status langsung di dashboard
+- **Logo upload** — upload file gambar untuk logo per server (preview di form + card)
+- **Loading/skeleton** — animated placeholder saat loading data
+- **Responsive grid** — 1/2/3 column sesuai viewport
+
+### 📊 Activity Logs Enhancement
+- **Server access logging** — setiap klik "Buka Server" tercatat di `activity_logs`
+- **Credential access logging** — setiap reveal credentials tercatat dengan action `credential_access`
+- **Logging via backend** — `/api/open` endpoint auto-log ke database
+- **Filter baru** — filter `server_access` dan `credential_access` di Activity Logs page
+- **Color codes** — purple untuk server_access, orange untuk credential_access
+- **Kolom `metadata`** — tambah kolom metadata ke `activity_logs` untuk data tambahan
+
+### 🧭 Role-Based Sidebar Navigation
+- **Split navItems** — general nav (Dashboard, Online Users) vs admin nav (Servers, Users, Activity Logs, Settings)
+- **Admin section** — hanya muncul jika `isAdmin === true`
+- **Section label** — "Admin" dengan visual separator
+- **Hapus Sidebar lama** — hapus `src/components/Sidebar.jsx`, layout pake yang di `layout/`
+
+### 🖥️ AdminServers Enhancement
+- **Credential form** — username + password fields + auto-login toggle di form modal
+- **File upload logo** — base64 preview langsung di form
+- **Assign button + modal** — assign server ke user (diganti dengan visible_to per divisi)
+- **Hapus unused toggles** — remove assign, notes, log buttons dari table actions
+
+### 🕐 Online Users — Compact Mode
+- **Compact mode** — avatar + name + time, max 5 users
+- **Fix NaN error** — proper timestamp validation di `formatLastActivity`
+- **Auto-refresh** — every 30 detik di kedua mode
+
+### 🔧 Teknis
+- **Backend** — `requireAdmin` middleware, endpoint credentials/assignments di `servers.js`
+- **Database** — migrations otomatis untuk kolom baru, tabel `server_assignments`
+- **Build clean** — 0 error production build (Vite)
+- **CHANGELOG** — dokumentasi lengkap semua perubahan
 
 ---
 
