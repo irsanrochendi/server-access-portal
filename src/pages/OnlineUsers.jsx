@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Wifi, WifiOff, User, Shield, Clock } from 'lucide-react';
 import { api } from '../services/api';
 
-export default function OnlineUsers() {
+export default function OnlineUsers({ compact = false }) {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -28,98 +28,112 @@ export default function OnlineUsers() {
 
   const formatLastActivity = (timestamp) => {
     if (!timestamp) return 'Baru saja';
-    // Handle both Unix timestamp (ms) and string date
-    const ts = typeof timestamp === 'number' ? timestamp : parseInt(timestamp);
-    if (isNaN(ts)) return 'Baru saja';
-    const diff = Date.now() - ts;
-    if (diff < 0 || diff > 7 * 24 * 60 * 60 * 1000) return 'Baru saja';
-    const seconds = Math.floor(diff / 1000);
-    if (seconds < 60) return `${seconds}s lalu`;
-    const minutes = Math.floor(seconds / 60);
-    if (minutes < 60) return `${minutes}m lalu`;
-    const hours = Math.floor(minutes / 60);
-    return `${hours}h lalu`;
+    const diff = Date.now() - new Date(timestamp).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Baru saja';
+    if (mins < 60) return `${mins}m lalu`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}j lalu`;
+    return `${Math.floor(hours / 24)}d lalu`;
   };
 
+  // ─── Compact Mode ────────────────────────────────────────────────────────
+  if (compact) {
+    if (loading) {
+      return (
+        <div className="space-y-2">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="h-10 bg-slate-100 dark:bg-white/5 rounded-lg animate-pulse" />
+          ))}
+        </div>
+      );
+    }
+    if (onlineUsers.length === 0) {
+      return (
+        <div className="text-center py-4">
+          <WifiOff className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+          <p className="text-sm text-slate-400">Belum ada yang online</p>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1.5">
+        {onlineUsers.slice(0, 5).map(user => (
+          <div key={user.id} className="flex items-center gap-2.5 py-1.5">
+            <div className="relative flex-shrink-0">
+              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                <span className="text-[10px] font-bold text-white">{user.name?.charAt(0)?.toUpperCase() || '?'}</span>
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{user.name}</p>
+              <p className="text-[10px] text-slate-400">{formatLastActivity(user.last_activity_at)}</p>
+            </div>
+          </div>
+        ))}
+        {onlineUsers.length > 5 && (
+          <p className="text-xs text-slate-400 text-center pt-1">+{onlineUsers.length - 5} lainnya</p>
+        )}
+      </div>
+    );
+  }
+
+  // ─── Full Mode ────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="animate-spin w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full" />
+      <div className="space-y-3">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-20 bg-slate-100 dark:bg-white/5 rounded-xl animate-pulse" />
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
-            <Wifi className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Wifi className="w-5 h-5 text-indigo-500" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">User Online</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-              {onlineUsers.length} user aktif dalam 5 menit terakhir
-            </p>
-          </div>
+          <h1 className="text-lg font-bold text-slate-900 dark:text-white">User Online</h1>
         </div>
-        <button
-          onClick={fetchOnlineUsers}
-          className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-        >
-          <Clock className="w-4 h-4" />
-          Refresh
-        </button>
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {onlineUsers.length} user aktif
+        </span>
       </div>
 
-      {/* Info Banner */}
-      <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
-        <Wifi className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-        <p className="text-sm text-emerald-700 dark:text-emerald-400">
-          User dianggap <strong>"online"</strong> jika ada aktivitas dalam <strong>5 menit</strong> terakhir.
-        </p>
-      </div>
-
-      {/* Online Users Grid */}
+      {/* List */}
       {onlineUsers.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {onlineUsers.map((user) => (
-            <div
-              key={user.id}
-              className="bg-white dark:bg-[#0d1321] rounded-2xl border border-slate-200 dark:border-white/10 p-5 shadow-sm"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <div className="w-11 h-11 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
-                      <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    {/* Online indicator */}
-                    <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-[#0d1321]" />
+        <div className="space-y-3">
+          {onlineUsers.map(user => (
+            <div key={user.id} className="bg-white dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/10 p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-600 flex items-center justify-center shadow-lg">
+                    <span className="text-sm font-bold text-white">{user.name?.charAt(0)?.toUpperCase() || '?'}</span>
                   </div>
-                  <div>
-                    <p className="font-semibold text-slate-900 dark:text-white">{user.name}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{user.email}</p>
-                  </div>
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-800" />
                 </div>
-                {/* Role badge */}
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
-                  user.role === 'admin'
-                    ? 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400'
-                    : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
-                }`}>
-                  {user.role === 'admin' && <Shield className="w-3 h-3 inline mr-1" />}
-                  {user.role}
-                </span>
-              </div>
-
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-500 dark:text-slate-400">Aktivitas terakhir</span>
-                  <span className="font-medium text-slate-700 dark:text-slate-300">
-                    {formatLastActivity(user.last_activity_at)}
-                  </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-slate-900 dark:text-white text-sm">{user.name}</p>
+                    {user.is_admin === 1 && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                        <Shield className="w-3 h-3" />Admin
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    <span>{user.email}</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatLastActivity(user.last_activity_at)}
+                    </span>
+                  </div>
                 </div>
                 {user.division && (
                   <div className="flex items-center justify-between">

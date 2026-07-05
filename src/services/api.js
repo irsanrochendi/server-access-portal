@@ -100,10 +100,14 @@ export const api = {
   downloadBackup: (filename) => `${API_BASE}/backup/download/${encodeURIComponent(filename)}`,
   restoreBackup: (filename) => request('/backup/restore', { method: 'POST', body: JSON.stringify({ filename }) }),
 
-  // Server Notes (admin only)
-  getServerNotes: (serverId) => request(`/server-notes/${serverId}/notes`),
-  updateServerNotes: (serverId, data) => request(`/server-notes/${serverId}/notes`, { method: 'PUT', body: JSON.stringify(data) }),
-  logServerNoteAccess: (serverId, action) => request(`/server-notes/${serverId}/notes/audit`, { method: 'POST', body: JSON.stringify({ action }) }),
-  getServerNoteLogs: (serverId, limit) =>
-    request(`/server-notes/${serverId}/notes/logs${limit ? `?limit=${limit}` : ''}`),
+  // Resources
+  getResources: () => request('/resources'),
+  getResource: (id) => request(`/resources/${id}`),
+  getResourceCredentials: (id) => request(`/resources/${id}/credentials`),
+  createResource: (data) => request('/resources', { method: 'POST', body: JSON.stringify(data) }),
+  updateResource: (id, data) => request(`/resources/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteResource: (id) => request(`/resources/${id}`, { method: 'DELETE' }),
+  assignResource: (id, data) => request(`/resources/${id}/assign`, { method: 'POST', body: JSON.stringify(data) }),
+  removeAssignment: (resourceId, assignmentId) => request(`/resources/${resourceId}/assign/${assignmentId}`, { method: 'DELETE' }),
+  getAssignments: (id) => request(`/resources/${id}/assignments`),
 };

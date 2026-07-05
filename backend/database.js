@@ -168,44 +168,36 @@ export function initDb() {
   // Index for online users query
   d.exec(`CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity_at)`);
 
-  // ─── v1.5.0: Health Monitoring ───────────────────────────────────────────
-  // server_uptime_history: stores each health check result over time
+  // ─── v2.0.0: Resource Gateway ──────────────────────────────────────────
   d.exec(`
-    CREATE TABLE IF NOT EXISTS server_uptime_history (
+    CREATE TABLE IF NOT EXISTS resources (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
-      status TEXT NOT NULL CHECK(status IN ('online','offline','unknown')),
-      latency_ms INTEGER,
-      error TEXT,
-      checked_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-  `);
-  d.exec(`CREATE INDEX IF NOT EXISTS idx_uptime_server_time ON server_uptime_history(server_id, checked_at)`);
-
-  // alerts: server-down and recovery notifications
-  d.exec(`
-    CREATE TABLE IF NOT EXISTS alerts (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
-      type TEXT NOT NULL CHECK(type IN ('down','recovery','latency')),
-      message TEXT NOT NULL,
-      is_read INTEGER NOT NULL DEFAULT 0,
-      is_resolved INTEGER NOT NULL DEFAULT 0,
+      name TEXT NOT NULL,
+      url TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'web' CHECK(type IN ('web','rdp','ssh')),
+      category TEXT DEFAULT '',
+      icon TEXT DEFAULT '',
+      description TEXT DEFAULT '',
+      shared_username TEXT DEFAULT '',
+      shared_password_encrypted TEXT DEFAULT '',
+      auto_login_enabled INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      resolved_at TEXT
-    );
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
   `);
-  d.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_unread ON alerts(is_read, is_resolved, created_at DESC)`);
-  d.exec(`CREATE INDEX IF NOT EXISTS idx_alerts_server ON alerts(server_id, created_at DESC)`);
 
-  // Migration: add last_checked_at if missing
-  const serverCols = d.prepare("PRAGMA table_info(servers)").all().map(c => c.name);
-  if (!serverCols.includes('last_checked_at')) {
-    d.exec(`ALTER TABLE servers ADD COLUMN last_checked_at TEXT`);
-  }
-  if (!serverCols.includes('latency_ms')) {
-    d.exec(`ALTER TABLE servers ADD COLUMN latency_ms INTEGER`);
-  }
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS resource_assignments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      resource_id INTEGER NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_resource_assignments_resource ON resource_assignments(resource_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_resource_assignments_user ON resource_assignments(user_id)`);
 
   // ─── v1.6.0: Quick Connect & Connection History ──────────────────────────
   d.exec(`
@@ -219,28 +211,5 @@ export function initDb() {
   d.exec(`CREATE INDEX IF NOT EXISTS idx_connection_logs_user_server ON connection_logs(user_id, server_id, connected_at DESC)`);
 
   // ─── v1.7.0: Server Grouping ──────────────────────────────────────────────
-  d.exec(`
-    CREATE TABLE IF NOT EXISTS server_groups (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT,
-      color TEXT DEFAULT '#6366f1',
-      icon TEXT DEFAULT 'folder',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  d.exec(`
-    CREATE TABLE IF NOT EXISTS server_group_members (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      group_id INTEGER NOT NULL REFERENCES server_groups(id) ON DELETE CASCADE,
-      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
-      UNIQUE(group_id, server_id)
-    )
-  `);
-
-  d.exec(`CREATE INDEX IF NOT EXISTS idx_group_members_group ON server_group_members(group_id)`);
-  d.exec(`CREATE INDEX IF NOT EXISTS idx_group_members_server ON server_group_members(server_id)`);
-
   return d;
 }

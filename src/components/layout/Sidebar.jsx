@@ -13,15 +13,22 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Monitor,
+  Folder,
 } from 'lucide-react';
 
+// General nav — visible to ALL users (staff + admin)
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/admin/servers', icon: Server, label: 'Servers', adminOnly: true },
-  { to: '/admin/users', icon: Users, label: 'Users', adminOnly: true },
-  { to: '/admin/activity-logs', icon: ClipboardList, label: 'Activity Logs', adminOnly: true },
-  { to: '/admin/settings', icon: Settings, label: 'Settings', adminOnly: true },
+  { to: '/online-users', icon: Users, label: 'Online Users' },
+];
+
+// Admin-only nav — visible only to admin
+const adminNavItems = [
+  { to: '/admin/resources', icon: Folder, label: 'Resources' },
+  { to: '/admin/servers', icon: Server, label: 'Servers' },
+  { to: '/admin/users', icon: Users, label: 'Users' },
+  { to: '/admin/activity-logs', icon: ClipboardList, label: 'Activity Logs' },
+  { to: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
 
 export default function Sidebar({ collapsed, onToggle, onLogout }) {
@@ -31,6 +38,34 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const closeMobile = () => setIsMobileOpen(false);
+
+  const renderNavItem = (item) => {
+    const isActive = location.pathname.startsWith(item.to);
+    return (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        onClick={closeMobile}
+        className={`
+          flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+          transition-colors duration-150 group relative
+          ${isActive
+            ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+            : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
+          }
+        `}
+      >
+        <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`} />
+        {!collapsed && <span className="truncate">{item.label}</span>}
+        {collapsed && (
+          <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded
+            opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
+            {item.label}
+          </div>
+        )}
+      </NavLink>
+    );
+  };
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
@@ -51,35 +86,20 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems
-          .filter(item => !item.adminOnly || isAdmin)
-          .map(item => {
-            const isActive = location.pathname.startsWith(item.to);
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                onClick={closeMobile}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-                  transition-colors duration-150 group relative
-                  ${isActive
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                    : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
-                  }
-                `}
-              >
-                <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`} />
-                {!collapsed && <span className="truncate">{item.label}</span>}
-                {collapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded
-                    opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
-                    {item.label}
-                  </div>
-                )}
-              </NavLink>
-            );
-          })}
+        {/* General nav — all users */}
+        {navItems.map(renderNavItem)}
+
+        {/* Admin section — only for admin */}
+        {isAdmin && (
+          <>
+            <div className="pt-4 pb-1">
+              <p className={`px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ${collapsed ? 'text-center' : ''}`}>
+                {collapsed ? '⚙' : 'Admin'}
+              </p>
+            </div>
+            {adminNavItems.map(renderNavItem)}
+          </>
+        )}
       </nav>
 
       {/* Bottom */}

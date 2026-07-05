@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Server, ExternalLink, Copy, Globe, Shield, Terminal, Monitor, Cpu, Activity, Lock } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { api } from '../services/api';
-import HealthHistoryModal from './HealthHistoryModal';
 
 function field(s, k1, k2) { return s[k1] ?? s[k2]; }
 
@@ -37,7 +36,6 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
   const [latency, setLatency] = useState(null);
   const [pinging, setPinging] = useState(false);
   const [pingError, setPingError] = useState(null);
-  const [showHealthModal, setShowHealthModal] = useState(false);
 
   const name = field(server, 'name', 'name');
   const ipAddress = field(server, 'ip_address', 'ipAddress');
@@ -228,11 +226,6 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
           <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold tracking-wide">Intranet Only</span>
         </div>
       </div>
-
-      {/* Health History Modal */}
-      {showHealthModal && (
-        <HealthHistoryModal server={server} onClose={() => setShowHealthModal(false)} />
-      )}
     </div>
   );
 }

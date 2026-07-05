@@ -64,3 +64,5 @@ export function authorize(...roles) {
     next();
   };
 }
+
+export const requireAdmin = authorize('admin');

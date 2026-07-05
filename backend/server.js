@@ -24,14 +24,9 @@ import adRoutes from './routes/ad.js';
 import backupRoutes from './routes/backup.js';
 
 import uploadRoutes from './routes/upload.js';
-import notesRoutes from './routes/notes.js';
-import healthRoutes from './routes/health.js';
-import alertRoutes from './routes/alerts.js';
-import connectionRoutes from './routes/connections.js';
-import groupRoutes from './routes/groups.js';
+import resourceRoutes from './routes/resources.js';
 import { initBackupSettings } from './services/backup.js';
 import { startAutoBackup } from './services/autoBackupScheduler.js';
-import { startHealthChecker } from './services/healthCheck.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -63,18 +58,11 @@ app.use('/api/upload', uploadRoutes);
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use('/api/db', dbRoutes);
 app.use('/api/backup', backupRoutes);
-app.use('/api/server-notes', notesRoutes);  // /api/server-notes/:id/notes/*
-app.use('/api/health', healthRoutes);
-app.use('/api/alerts', alertRoutes);
-app.use('/api/connections', connectionRoutes);
-app.use('/api/groups', groupRoutes);
+app.use('/api/resources', resourceRoutes);
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();
 startAutoBackup();
-
-// Init health monitoring
-startHealthChecker();
 
 // Health
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));

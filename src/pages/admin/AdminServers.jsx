@@ -7,8 +7,6 @@ import { api } from '../../services/api';
 import StatusBadge from '../../components/StatusBadge';
 import ConfirmModal from '../../components/ConfirmModal';
 import EmptyState from '../../components/EmptyState';
-import ServerNotesModal from '../../components/ServerNotesModal';
-import ServerNotesLogModal from '../../components/ServerNotesLogModal';
 
 const PROTOCOLS = ['HTTP', 'HTTPS', 'SSH', 'RDP', 'FTP', 'TCP', 'OTHER'];
 const ENVS = ['Production', 'Staging', 'Development', 'Internal'];
@@ -54,8 +52,6 @@ export default function AdminServers() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [showNotesFor, setShowNotesFor] = useState(null);
-  const [showLogsFor, setShowLogsFor] = useState(null);
 
   const openCreate = () => {
     setEditingId(null);
@@ -340,21 +336,6 @@ export default function AdminServers() {
       )}
 
       <ConfirmModal open={!!deleteTarget} title="Hapus Server" message={`Yakin ingin menghapus server "${deleteTarget?.name}"?`} onConfirm={handleDelete} onCancel={() => setDeleteTarget(null)} loading={deleting} />
-
-      {showNotesFor && (
-        <ServerNotesModal
-          server={showNotesFor}
-          onClose={() => setShowNotesFor(null)}
-          onSave={() => {}}
-        />
-      )}
-
-      {showLogsFor && (
-        <ServerNotesLogModal
-          server={showLogsFor}
-          onClose={() => setShowLogsFor(null)}
-        />
-      )}
     </div>
   );
 }

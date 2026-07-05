@@ -5,8 +5,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
-import ConnectionHistory from './pages/ConnectionHistory';
-import ServerGroups from './pages/ServerGroups';
 import AdminServers from './pages/admin/AdminServers';
 import AdminUsers from './pages/admin/AdminUsers';
 import OnlineUsersAdmin from './pages/admin/OnlineUsers';
@@ -15,6 +13,7 @@ import ActivityLogs from './pages/admin/ActivityLogs';
 import AdminRoles from './pages/admin/AdminRoles';
 import DbBrowser from './pages/admin/DbBrowser';
 import Settings from './pages/admin/Settings';
+import ResourceManager from './pages/admin/ResourceManager';
 import { useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -37,8 +36,6 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/online-users" element={<OnlineUsers />} />
-        <Route path="/connection-history" element={<ConnectionHistory />} />
-        <Route path="/groups" element={<ServerGroups />} />
 
         {/* Admin routes */}
         <Route
@@ -81,6 +78,11 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin/resources" element={
+          <ProtectedRoute roles={['admin']}>
+            <ResourceManager />
+          </ProtectedRoute>
+        } />
         <Route
           path="/admin/db-browser"
           element={
