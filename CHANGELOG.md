@@ -2,27 +2,29 @@
 
 ## v2.1.0 — Portal Refactor (2026-07-05)
 
+### 🐛 Bug Fixes
+- **Fix SQLite datetime error** — `datetime("now")` pakai double quotes menyebabkan error. Diubah ke JavaScript Date format
+
+### 🔐 Credential Management
+- **ServerCard credential modal** — Lock icon membuka modal dengan username/password
+- **Toggle show/hide password** — user bisa show/hide password
+- **Copy to clipboard** — tombol copy untuk username dan password
+- **Admin only** — credential reveal hanya untuk admin
+
+### 📊 Activity Logging
+- **`server_access` logging** — dicatat setiap kali klik "Buka Server"
+- **`credential_access` logging** — dicatat setiap kali klik Lock icon
+- **API endpoint** — `POST /api/logs/activity` untuk frontend logging
+- **Frontend helper** — `api.logActivity()` di services/api.js
+
 ### 🧹 Feature Cleanup (Task 1-3)
+- **Hapus Health Monitoring** — hapus health.js, alerts.js, statusCheck.js
+- **Hapus Server Notes** — hapus ServerNotesModal, ServerNotesLogModal, notes.js
+- **Hapus Connection History** — hapus ConnectionHistory, connections.js, connection_logs table
 
-**Task 1: Hapus Health Monitoring & Alerts**
-- Hapus `routes/health.js` dan `routes/alerts.js`
-- Hapus `services/statusCheck.js`
-- Hapus health monitoring dari `Sidebar.jsx` dan `App.jsx`
-- Hapus `/api/health` endpoint monitoring
-
-**Task 2: Hapus Server Notes**
-- Hapus `components/ServerNotesModal.jsx` dan `components/ServerNotesLogModal.jsx`
-- Hapus `routes/notes.js` dari server.js
-- Hapus state `showNotesFor` dan `showLogsFor` dari komponen
-
-**Task 3: Hapus Connection History**
-- Hapus `pages/ConnectionHistory.jsx`
-- Hapus `routes/connections.js`
-- Hapus `connection_logs` table dari database
-- Hapus route dari `server.js` dan `App.jsx`
-
-### 🔧 Technical Fix
-- **Fix SQLite datetime error** — `datetime("now")` → JavaScript Date format di `routes/logs.js`
+### 🔧 Technical
+- **ServerCard component** — unified component dengan credentials modal
+- **Hapus broken Activity button** — tombol yang refer ke modal tidak ada
 - **Simplified codebase** — kurang lebih 900+ baris kode dihapus
 
 ---
