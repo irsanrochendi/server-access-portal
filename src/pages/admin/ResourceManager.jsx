@@ -120,10 +120,9 @@ export default function ResourceManager() {
                   r.type === 'web' ? 'from-blue-500 to-cyan-500' :
                   r.type === 'rdp' ? 'from-purple-500 to-pink-500' : 'from-emerald-500 to-teal-500'
                 } flex items-center justify-center`}>
-                  {React.createElement(
-                    r.type === 'web' ? Globe : r.type === 'rdp' ? Monitor : Terminal,
-                    { className: 'w-5 h-5 text-white' }
-                  )}
+                  {r.type === 'web' ? <Globe className="w-5 h-5 text-white" /> :
+                   r.type === 'rdp' ? <Monitor className="w-5 h-5 text-white" /> :
+                   <Terminal className="w-5 h-5 text-white" />}
                 </div>
                 <div>
                   <p className="font-semibold text-slate-900 dark:text-white">{r.name}</p>
