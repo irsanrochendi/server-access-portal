@@ -1,31 +1,37 @@
 # Changelog — Server Access Portal AST
 
-## v2.1.0 — Portal Refactor (2026-07-05)
+## v2.0.0 — Portal Refactor & Activity Logging (2026-07-05)
 
-### 🐛 Bug Fixes
-- **Fix SQLite datetime error** — `datetime("now")` pakai double quotes menyebabkan error. Diubah ke JavaScript Date format
+### 🔐 Built-in Credential Management
+- **Inline credential reveal** — Lock icon di setiap server card untuk lihat credentials
+- **Credential modal** — popup dengan username, password (toggle show/hide), copy buttons
+- **Activity logging** — setiap buka server atau lihat credentials dicatat di activity_logs
+- **AES-256 encryption** — credentials disimpan terenkripsi di database
+- **Admin only** — credential reveal hanya untuk admin users
 
-### 🔐 Credential Management
-- **ServerCard credential modal** — Lock icon membuka modal dengan username/password
-- **Toggle show/hide password** — user bisa show/hide password
-- **Copy to clipboard** — tombol copy untuk username dan password
-- **Admin only** — credential reveal hanya untuk admin
-
-### 📊 Activity Logging
-- **`server_access` logging** — dicatat setiap kali klik "Buka Server"
-- **`credential_access` logging** — dicatat setiap kali klik Lock icon
+### 📊 Activity Logging System
+- **`server_access` logging** — dicatat setiap kali user klik "Buka Server"
+- **`credential_access` logging** — dicatat setiap kali user klik Lock icon
 - **API endpoint** — `POST /api/logs/activity` untuk frontend logging
-- **Frontend helper** — `api.logActivity()` di services/api.js
+- **Frontend integration** — `api.logActivity()` helper di services/api.js
 
-### 🧹 Feature Cleanup (Task 1-3)
-- **Hapus Health Monitoring** — hapus health.js, alerts.js, statusCheck.js
-- **Hapus Server Notes** — hapus ServerNotesModal, ServerNotesLogModal, notes.js
-- **Hapus Connection History** — hapus ConnectionHistory, connections.js, connection_logs table
-
-### 🔧 Technical
-- **ServerCard component** — unified component dengan credentials modal
-- **Hapus broken Activity button** — tombol yang refer ke modal tidak ada
+### 🧹 Feature Cleanup
+- **Remove Health Monitoring** — hapus health check service, alerts, health history modal
+- **Remove Server Notes** — hapus ServerNotesModal, ServerNotesLogModal
+- **Remove Connection History** — hapus connection_logs table dan history page
 - **Simplified codebase** — kurang lebih 900+ baris kode dihapus
+
+### 🔧 Technical Changes
+- **Fix SQLite datetime error** — `datetime("now")` → JavaScript Date format
+- **ServerCard component** — unified component dengan credentials modal
+- **Role-based sidebar** — staff vs admin navigation yang berbeda
+- **Dashboard inline cards** — server cards dirender langsung di Dashboard
+- **Remove Resource system** — ResourceCard, ResourceGrid, ResourceContext dihapus
+- **Update ActivityLogs page** — support filter untuk action types baru
+
+### ⚠️ Breaking Changes
+- **Server Notes & Health features removed** — upgrade memerlukan pengecekan kompatibilitas
+- **Connection history tidak tersedia** — data lama tidak bisa diakses
 
 ---
 
