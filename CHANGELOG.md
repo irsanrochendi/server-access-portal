@@ -1,37 +1,29 @@
 # Changelog — Server Access Portal AST
 
-## v2.1.0 — Portal Refactor & Activity Logging (2026-07-05)
+## v2.1.0 — Portal Refactor (2026-07-05)
 
-### 🔐 Built-in Credential Management
-- **Inline credential reveal** — Lock icon di setiap server card untuk lihat credentials
-- **Credential modal** — popup dengan username, password (toggle show/hide), copy buttons
-- **Activity logging** — setiap buka server atau lihat credentials dicatat di activity_logs
-- **AES-256 encryption** — credentials disimpan terenkripsi di database
-- **Admin only** — credential reveal hanya untuk admin users
+### 🧹 Feature Cleanup (Task 1-3)
 
-### 📊 Activity Logging System
-- **`server_access` logging** — dicatat setiap kali user klik "Buka Server"
-- **`credential_access` logging** — dicatat setiap kali user klik Lock icon
-- **API endpoint** — `POST /api/logs/activity` untuk frontend logging
-- **Frontend integration** — `api.logActivity()` helper di services/api.js
+**Task 1: Hapus Health Monitoring & Alerts**
+- Hapus `routes/health.js` dan `routes/alerts.js`
+- Hapus `services/statusCheck.js`
+- Hapus health monitoring dari `Sidebar.jsx` dan `App.jsx`
+- Hapus `/api/health` endpoint monitoring
 
-### 🧹 Feature Cleanup
-- **Remove Health Monitoring** — hapus health check service, alerts, health history modal
-- **Remove Server Notes** — hapus ServerNotesModal, ServerNotesLogModal
-- **Remove Connection History** — hapus connection_logs table dan history page
+**Task 2: Hapus Server Notes**
+- Hapus `components/ServerNotesModal.jsx` dan `components/ServerNotesLogModal.jsx`
+- Hapus `routes/notes.js` dari server.js
+- Hapus state `showNotesFor` dan `showLogsFor` dari komponen
+
+**Task 3: Hapus Connection History**
+- Hapus `pages/ConnectionHistory.jsx`
+- Hapus `routes/connections.js`
+- Hapus `connection_logs` table dari database
+- Hapus route dari `server.js` dan `App.jsx`
+
+### 🔧 Technical Fix
+- **Fix SQLite datetime error** — `datetime("now")` → JavaScript Date format di `routes/logs.js`
 - **Simplified codebase** — kurang lebih 900+ baris kode dihapus
-
-### 🔧 Technical Changes
-- **Fix SQLite datetime error** — `datetime("now")` → JavaScript Date format
-- **ServerCard component** — unified component dengan credentials modal
-- **Role-based sidebar** — staff vs admin navigation yang berbeda
-- **Dashboard inline cards** — server cards dirender langsung di Dashboard
-- **Remove Resource system** — ResourceCard, ResourceGrid, ResourceContext dihapus
-- **Update ActivityLogs page** — support filter untuk action types baru
-
-### ⚠️ Breaking Changes
-- **Server Notes & Health features removed** — upgrade memerlukan pengecekan kompatibilitas
-- **Connection history tidak tersedia** — data lama tidak bisa diakses
 
 ---
 
