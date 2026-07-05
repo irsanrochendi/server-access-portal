@@ -24,7 +24,6 @@ import adRoutes from './routes/ad.js';
 import backupRoutes from './routes/backup.js';
 
 import uploadRoutes from './routes/upload.js';
-import resourceRoutes from './routes/resources.js';
 import { initBackupSettings } from './services/backup.js';
 import { startAutoBackup } from './services/autoBackupScheduler.js';
 
@@ -58,7 +57,6 @@ app.use('/api/upload', uploadRoutes);
 app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use('/api/db', dbRoutes);
 app.use('/api/backup', backupRoutes);
-app.use('/api/resources', resourceRoutes);
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();

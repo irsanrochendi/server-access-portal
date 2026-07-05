@@ -168,36 +168,33 @@ export function initDb() {
   // Index for online users query
   d.exec(`CREATE INDEX IF NOT EXISTS idx_users_last_activity ON users(last_activity_at)`);
 
-  // ─── v2.0.0: Resource Gateway ──────────────────────────────────────────
+  // ─── v2.0.0: Merge Resource → Server ─────────────────────────────────
   d.exec(`
-    CREATE TABLE IF NOT EXISTS resources (
+    CREATE TABLE IF NOT EXISTS server_assignments (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      url TEXT NOT NULL,
-      type TEXT NOT NULL DEFAULT 'web' CHECK(type IN ('web','rdp','ssh')),
-      category TEXT DEFAULT '',
-      icon TEXT DEFAULT '',
-      description TEXT DEFAULT '',
-      shared_username TEXT DEFAULT '',
-      shared_password_encrypted TEXT DEFAULT '',
-      auto_login_enabled INTEGER NOT NULL DEFAULT 0,
-      is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  d.exec(`
-    CREATE TABLE IF NOT EXISTS resource_assignments (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      resource_id INTEGER NOT NULL REFERENCES resources(id) ON DELETE CASCADE,
+      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
       user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
       role TEXT DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )
   `);
-  d.exec(`CREATE INDEX IF NOT EXISTS idx_resource_assignments_resource ON resource_assignments(resource_id)`);
-  d.exec(`CREATE INDEX IF NOT EXISTS idx_resource_assignments_user ON resource_assignments(user_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_server_assignments_server ON server_assignments(server_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_server_assignments_user ON server_assignments(user_id)`);
+
+  // Migration: add credential columns to servers
+  const sCols = d.prepare("PRAGMA table_info(servers)").all().map(c => c.name);
+  if (!sCols.includes('shared_username')) {
+    d.exec(`ALTER TABLE servers ADD COLUMN shared_username TEXT DEFAULT ''`);
+  }
+  if (!sCols.includes('shared_password_encrypted')) {
+    d.exec(`ALTER TABLE servers ADD COLUMN shared_password_encrypted TEXT DEFAULT ''`);
+  }
+  if (!sCols.includes('auto_login_enabled')) {
+    d.exec(`ALTER TABLE servers ADD COLUMN auto_login_enabled INTEGER NOT NULL DEFAULT 0`);
+  }
+  if (!sCols.includes('logo_url')) {
+    d.exec(`ALTER TABLE servers ADD COLUMN logo_url TEXT DEFAULT NULL`);
+  }
 
   // ─── v1.6.0: Quick Connect & Connection History ──────────────────────────
   d.exec(`

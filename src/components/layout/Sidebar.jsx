@@ -13,7 +13,6 @@ import {
   ChevronRight,
   Sun,
   Moon,
-  Folder,
 } from 'lucide-react';
 
 // General nav — visible to ALL users (staff + admin)
@@ -24,7 +23,6 @@ const navItems = [
 
 // Admin-only nav — visible only to admin
 const adminNavItems = [
-  { to: '/admin/resources', icon: Folder, label: 'Resources' },
   { to: '/admin/servers', icon: Server, label: 'Servers' },
   { to: '/admin/users', icon: Users, label: 'Users' },
   { to: '/admin/activity-logs', icon: ClipboardList, label: 'Activity Logs' },

@@ -27,8 +27,8 @@ export default function OnlineUsers({ compact = false }) {
   }, [fetchOnlineUsers]);
 
   const formatLastActivity = (timestamp) => {
-    if (!timestamp) return 'Baru saja';
-    const diff = Date.now() - new Date(timestamp).getTime();
+    if (!timestamp || isNaN(timestamp)) return 'Baru saja';
+    const diff = Date.now() - Number(timestamp);
     const mins = Math.floor(diff / 60000);
     if (mins < 1) return 'Baru saja';
     if (mins < 60) return `${mins}m lalu`;

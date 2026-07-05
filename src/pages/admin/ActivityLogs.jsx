@@ -10,6 +10,8 @@ const actionColors = {
   create: 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30',
   update: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/30',
   delete: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30',
+  server_access: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/30',
+  credential_access: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30',
 };
 
 export default function ActivityLogs() {
@@ -55,6 +57,8 @@ export default function ActivityLogs() {
             <option value="">Semua Aksi</option>
             <option value="login">Login</option><option value="logout">Logout</option>
             <option value="create">Create</option><option value="update">Update</option><option value="delete">Delete</option>
+            <option value="server_access">Server Access</option>
+            <option value="credential_access">Credential Access</option>
           </select>
         </div>
       </div>

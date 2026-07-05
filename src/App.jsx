@@ -13,7 +13,6 @@ import ActivityLogs from './pages/admin/ActivityLogs';
 import AdminRoles from './pages/admin/AdminRoles';
 import DbBrowser from './pages/admin/DbBrowser';
 import Settings from './pages/admin/Settings';
-import ResourceManager from './pages/admin/ResourceManager';
 import { useAuth } from './contexts/AuthContext';
 
 function App() {
@@ -78,11 +77,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin/resources" element={
-          <ProtectedRoute roles={['admin']}>
-            <ResourceManager />
-          </ProtectedRoute>
-        } />
         <Route
           path="/admin/db-browser"
           element={

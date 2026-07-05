@@ -1,9 +1,17 @@
 import { useState, useEffect } from 'react';
-import { Server, ExternalLink, Copy, Globe, Shield, Terminal, Monitor, Cpu, Activity, Lock } from 'lucide-react';
+import { Server, ExternalLink, Copy, Globe, Shield, Terminal, Monitor, Cpu, Activity, Lock, Eye, EyeOff, X } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import { api } from '../services/api';
 
 function field(s, k1, k2) { return s[k1] ?? s[k2]; }
+
+async function logActivity(action, module, description, metadata = {}) {
+  try {
+    await api.logActivity({ action, module, description, metadata });
+  } catch (err) {
+    console.error('Failed to log activity:', err);
+  }
+}
 
 async function openServer(server) {
   const proto = field(server, 'protocol', 'protocol')?.toUpperCase();
@@ -13,7 +21,7 @@ async function openServer(server) {
   const pref = field(server, 'browser_pref', 'browserPref');
   try {
     const token = localStorage.getItem('portal_token');
-    const body = { protocol: proto, browser: pref || undefined };
+    const body = { protocol: proto, browser: pref || undefined, serverId: server.id };
     if (proto === 'SSH') body.url = `${ip}${port && port !== 22 ? ':'+port : ''}`;
     else if (proto === 'RDP') body.url = `${ip}${port && port !== 3389 ? ':'+port : ''}`;
     else body.url = url;
@@ -22,20 +30,19 @@ async function openServer(server) {
     });
     if (!r.ok) alert((await r.json()).error || 'Gagal');
 
-    // Log connection
-    const authToken = localStorage.getItem('token');
-    await fetch('http://localhost:4000/api/connections/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
-      body: JSON.stringify({ serverId: server.id }),
-    }).catch(err => console.error('Failed to log connection:', err));
+    // Log server access
+    await logActivity('server_access', 'server', `Membuka server ${server.name || server.id}`, { server_id: server.id, protocol: proto });
   } catch (e) { alert('Gagal: ' + e.message); }
 }
 
-export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 }) {
+export default function ServerCard({ server, onCopyIp, index = 0 }) {
   const [latency, setLatency] = useState(null);
   const [pinging, setPinging] = useState(false);
   const [pingError, setPingError] = useState(null);
+  const [showCredsModal, setShowCredsModal] = useState(false);
+  const [creds, setCreds] = useState(null);
+  const [loadingCreds, setLoadingCreds] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const name = field(server, 'name', 'name');
   const ipAddress = field(server, 'ip_address', 'ipAddress');
@@ -62,6 +69,28 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
     } catch (err) {
       setPingError(err.message);
     }
+  };
+
+  const handleRevealCreds = async () => {
+    if (creds) {
+      setShowCredsModal(true);
+      return;
+    }
+    setLoadingCreds(true);
+    try {
+      const res = await api.getServerCredentials(server.id);
+      setCreds(res);
+      setShowCredsModal(true);
+      await logActivity('credential_access', 'server', `Mengakses kredensial server ${server.name}`, { server_id: server.id });
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoadingCreds(false);
+    }
+  };
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
   };
 
   // Auto-ping on mount + refresh every 10 seconds
@@ -187,27 +216,18 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
             disabled={!isOnline}
           >
             {isSSH ? <Terminal className="w-4 h-4" /> : isRDP ? <Monitor className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
-            {isSSH ? 'Open SSH' : isRDP ? 'Open RDP' : 'Open Server'}
+            {isSSH ? 'Open SSH' : isRDP ? 'Open RDP' : 'Buka Server'}
           </button>
           <button
-            onClick={() => onShowNotes?.(server)}
+            onClick={handleRevealCreds}
+            disabled={loadingCreds}
             className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl
               bg-amber-100 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400
               hover:bg-amber-200 dark:hover:bg-amber-500/20 hover:border-amber-300 dark:hover:border-amber-500/30
-              text-xs font-semibold transition-all duration-300 active:scale-95 shadow-sm"
+              text-xs font-semibold transition-all duration-300 active:scale-95 shadow-sm disabled:opacity-50"
             title="Catatan & Kredensial"
           >
-            <Lock className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setShowHealthModal(true)}
-            className="inline-flex items-center justify-center gap-1.5 px-3.5 py-3 rounded-xl
-              bg-indigo-100 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-400
-              hover:bg-indigo-200 dark:hover:bg-indigo-500/20 hover:border-indigo-300 dark:hover:border-indigo-500/30
-              text-xs font-semibold transition-all duration-300 active:scale-95 shadow-sm"
-            title="Health History"
-          >
-            <Activity className="w-4 h-4" />
+            {loadingCreds ? <Cpu className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
           </button>
           <button
             onClick={() => { navigator.clipboard.writeText(ipAddress); onCopyIp?.(ipAddress); }}
@@ -226,6 +246,58 @@ export default function ServerCard({ server, onCopyIp, onShowNotes, index = 0 })
           <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold tracking-wide">Intranet Only</span>
         </div>
       </div>
+
+      {/* Credentials Modal */}
+      {showCredsModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+                  <Lock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800 dark:text-white">Kredensial Server</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{server.name}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowCredsModal(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {creds?.username && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Username</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type="text" readOnly value={creds.username} className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white text-sm font-mono" />
+                    <button onClick={() => handleCopy(creds.username)} className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-500/30 transition-colors">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              {creds?.password && (
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Password</label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <input type={showPassword ? 'text' : 'password'} readOnly value={creds.password} className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white text-sm font-mono" />
+                    <button onClick={() => setShowPassword(!showPassword)} className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors">
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                    <button onClick={() => handleCopy(creds.password)} className="p-2.5 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-200 dark:hover:bg-indigo-500/30 transition-colors">
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+              {!creds?.username && !creds?.password && (
+                <p className="text-center text-slate-500 dark:text-slate-400 py-4">Tidak ada kredensial untuk server ini</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

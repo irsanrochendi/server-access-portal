@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Server, ExternalLink, Eye, EyeOff, Pencil, Trash2, Download, Lock, Activity } from 'lucide-react';
+import { Server, ExternalLink, Eye, EyeOff, Pencil, Trash2, Download, Lock } from 'lucide-react';
 import { openServer } from '../../components/ServerCard';
 import { useServers } from '../../contexts/ServerContext';
 import { useToast } from '../../contexts/ToastContext';
@@ -16,6 +16,7 @@ const emptyForm = {
   name: '', ip_address: '', port: '', protocol: 'HTTP', access_url: '',
   description: '', category: '', environment: 'Production',
   status_check_url: '', status_check_method: 'none', browser_pref: '', visible_to: '', is_active: true,
+  shared_username: '', shared_password: '', auto_login_enabled: false, logo_url: '',
 };
 
 export default function AdminServers() {
@@ -29,6 +30,7 @@ export default function AdminServers() {
   useEffect(() => {
     Promise.all([
       api.getCategories().then(d => setCategories(d.categories.map(c => c.value))),
+      api.getUsers().then(d => setUsers(d.users || [])),
       fetch('/api/divisions', { headers: { Authorization: `Bearer ${localStorage.getItem('portal_token')}` } })
         .then(r => r.json()).then(d => setDivisions(d.divisions || [])),
     ]).catch(() => {});
@@ -52,6 +54,7 @@ export default function AdminServers() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [users, setUsers] = useState([]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -70,6 +73,10 @@ export default function AdminServers() {
       browser_pref: s.browser_pref || '',
       visible_to: s.visible_to || '',
       is_active: !!s.is_active,
+      shared_username: s.shared_username || '',
+      shared_password: '',
+      auto_login_enabled: !!s.auto_login_enabled,
+      logo_url: s.logo_url || '',
     });
     setShowForm(true);
   };
@@ -217,8 +224,6 @@ export default function AdminServers() {
                   <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setShowNotesFor(s)} className="p-1.5 rounded-lg hover:bg-amber-50 dark:hover:bg-amber-500/10 text-gray-400 hover:text-amber-600 transition-colors" title="Catatan & Kredensial"><Lock className="w-4 h-4" /></button>
-                      <button onClick={() => setShowLogsFor(s)} className="p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 text-gray-400 hover:text-blue-600 transition-colors" title="Audit Log Kredensial"><Activity className="w-4 h-4" /></button>
                       <button onClick={() => openServer(s)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-green-600 transition-colors" title="Open"><ExternalLink className="w-4 h-4" /></button>
                       <button onClick={() => handleToggle(s)} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-amber-600 transition-colors" title={s.is_active ? 'Nonaktifkan' : 'Aktifkan'}>
                         {s.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -269,6 +274,19 @@ export default function AdminServers() {
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Deskripsi</label>
                   <textarea name="description" value={form.description} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows={2} />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Logo Server</label>
+                  <input type="file" accept="image/*" onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => setForm({...form, logo_url: reader.result});
+                      reader.readAsDataURL(file);
+                    }
+                  }} className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  {form.logo_url && <img src={form.logo_url} alt="Preview" className="mt-2 h-16 w-16 object-contain rounded-lg border border-gray-300 dark:border-gray-600" />}
+                  <p className="text-xs text-gray-400 mt-1">Upload gambar logo server (opsional)</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kategori</label>
@@ -322,6 +340,30 @@ export default function AdminServers() {
                   </p>
                 </div>
               </div>
+
+              {/* Credentials Section */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Shared Credentials (Optional)
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Username</label>
+                    <input type="text" name="shared_username" value={form.shared_username} onChange={handleChange} placeholder="admin" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
+                    <input type="password" name="shared_password" value={form.shared_password} onChange={handleChange} placeholder="••••••••" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-3">
+                  <input type="checkbox" name="auto_login_enabled" checked={form.auto_login_enabled} onChange={handleChange} id="autologin" className="rounded" />
+                  <label htmlFor="autologin" className="text-sm text-gray-700 dark:text-gray-300">Enable auto-login helper</label>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">Credentials disimpan terenkripsi AES-256. Staff yang di-assign dapat melihat credentials ini.</p>
+              </div>
+
               <div className="flex items-center gap-2 mt-4">
                 <input type="checkbox" name="is_active" checked={form.is_active} onChange={handleChange} id="sactive" className="rounded" />
                 <label htmlFor="sactive" className="text-sm text-gray-700 dark:text-gray-300">Server Aktif (tampil di dashboard)</label>

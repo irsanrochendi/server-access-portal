@@ -26,18 +26,19 @@ if not exist "backend\node_modules" (
 echo Memulai Backend (port 4000)...
 start "Backend - Server Access Portal" cmd /c "cd /d %~dp0backend && node server.js && pause"
 
-echo Memulai Frontend (port 3000)...
-start "Frontend - Server Access Portal" cmd /c "cd /d %~dp0 && npm run dev"
+echo Memulai Frontend (port 80)...
+start "Frontend - Server Access Portal" cmd /c "cd /d %~dp0 && npm run dev -- --port 80 --host"
 
 echo.
 echo ============================================
-echo  Buka browser → http://localhost:3000
+echo  Server berjalan!
 echo ============================================
 echo.
-echo Login:
-echo   Admin: admin@portal.local / admin123
-echo   Staff: staff@portal.local / staff123
-echo.
+timeout /t 3 >nul
+
+echo Membuka browser...
+start http://localhost:80
+
 echo Tutup window ini setelah kedua terminal muncul.
 echo.
 timeout /t 5

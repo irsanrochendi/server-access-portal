@@ -47,6 +47,7 @@ export const api = {
     const qs = q.toString();
     return request(`/servers${qs ? `?${qs}` : ''}`);
   },
+  getServerStats: () => request('/servers/stats'),
   getServer: (id) => request(`/servers/${id}`),
   createServer: (data) => request('/servers', { method: 'POST', body: JSON.stringify(data) }),
   updateServer: (id, data) => request(`/servers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
@@ -100,14 +101,12 @@ export const api = {
   downloadBackup: (filename) => `${API_BASE}/backup/download/${encodeURIComponent(filename)}`,
   restoreBackup: (filename) => request('/backup/restore', { method: 'POST', body: JSON.stringify({ filename }) }),
 
-  // Resources
-  getResources: () => request('/resources'),
-  getResource: (id) => request(`/resources/${id}`),
-  getResourceCredentials: (id) => request(`/resources/${id}/credentials`),
-  createResource: (data) => request('/resources', { method: 'POST', body: JSON.stringify(data) }),
-  updateResource: (id, data) => request(`/resources/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteResource: (id) => request(`/resources/${id}`, { method: 'DELETE' }),
-  assignResource: (id, data) => request(`/resources/${id}/assign`, { method: 'POST', body: JSON.stringify(data) }),
-  removeAssignment: (resourceId, assignmentId) => request(`/resources/${resourceId}/assign/${assignmentId}`, { method: 'DELETE' }),
-  getAssignments: (id) => request(`/resources/${id}/assignments`),
+  // Server Credentials & Assignments
+  getServerCredentials: (id) => request(`/servers/${id}/credentials`),
+  assignServer: (id, data) => request(`/servers/${id}/assign`, { method: 'POST', body: JSON.stringify(data) }),
+  removeServerAssignment: (serverId, assignmentId) => request(`/servers/${serverId}/assign/${assignmentId}`, { method: 'DELETE' }),
+  getServerAssignments: (id) => request(`/servers/${id}/assignments`),
+
+  // Activity
+  logActivity: (data) => request('/logs/activity', { method: 'POST', body: JSON.stringify(data) }),
 };
