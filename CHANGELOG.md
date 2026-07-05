@@ -1,5 +1,40 @@
 # Changelog — Server Access Portal AST
 
+## v2.0.0 — Portal Refactor & Activity Logging (2026-07-05)
+
+### 🔐 Built-in Credential Management
+- **Inline credential reveal** — Lock icon di setiap server card untuk lihat credentials
+- **Credential modal** — popup dengan username, password (toggle show/hide), copy buttons
+- **Activity logging** — setiap buka server atau lihat credentials dicatat di activity_logs
+- **AES-256 encryption** — credentials disimpan terenkripsi di database
+- **Admin only** — credential reveal hanya untuk admin users
+
+### 📊 Activity Logging System
+- **`server_access` logging** — dicatat setiap kali user klik "Buka Server"
+- **`credential_access` logging** — dicatat setiap kali user klik Lock icon
+- **API endpoint** — `POST /api/logs/activity` untuk frontend logging
+- **Frontend integration** — `api.logActivity()` helper di services/api.js
+
+### 🧹 Feature Cleanup
+- **Remove Health Monitoring** — hapus health check service, alerts, health history modal
+- **Remove Server Notes** — hapus ServerNotesModal, ServerNotesLogModal
+- **Remove Connection History** — hapus connection_logs table dan history page
+- **Simplified codebase** — kurang lebih 900+ baris kode dihapus
+
+### 🔧 Technical Changes
+- **Fix SQLite datetime error** — `datetime("now")` → JavaScript Date format
+- **ServerCard component** — unified component dengan credentials modal
+- **Role-based sidebar** — staff vs admin navigation yang berbeda
+- **Dashboard inline cards** — server cards dirender langsung di Dashboard
+- **Remove Resource system** — ResourceCard, ResourceGrid, ResourceContext dihapus
+- **Update ActivityLogs page** — support filter untuk action types baru
+
+### ⚠️ Breaking Changes
+- **Server Notes & Health features removed** — upgrade memerlukan pengecekan kompatibilitas
+- **Connection history tidak tersedia** — data lama tidak bisa diakses
+
+---
+
 ## v1.7.0 — Server Grouping (2026-07-04)
 
 ### 📁 Server Groups
