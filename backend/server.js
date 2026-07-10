@@ -76,7 +76,11 @@ function cleanupExpiredTokens() {
     if (result.changes > 0) {
       console.log(`Token cleanup: removed ${result.changes} expired tokens`);
     }
-  } catch (err) { /* DB may not be ready yet at startup */ }
+  } catch (err) {
+      if (!err.message?.includes('no such table')) {
+        console.error('Token cleanup error:', err.message);
+      }
+    }
 }
 setTimeout(cleanupExpiredTokens, 30_000);
 setInterval(cleanupExpiredTokens, 5 * 60_000);
