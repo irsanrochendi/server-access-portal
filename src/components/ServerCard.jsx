@@ -16,37 +16,36 @@ async function logActivity(action, module, description, metadata = {}) {
 async function openServer(server) {
   const proto = field(server, 'protocol', 'protocol')?.toUpperCase();
   const name = field(server, 'name', 'name');
-  // SSH stays on the old manual flow
+  const pref = field(server, 'browser_pref', 'browserPref');
+
+  // SSH: client-side via ssh:// protocol handler (Windows 10/11 bawaan)
   if (proto === 'SSH') {
     const ip = field(server, 'ip_address', 'ipAddress');
     const port = field(server, 'port', 'port');
-    const url = `${ip}${port && port !== 22 ? ':' + port : ''}`;
-    try {
-      const token = localStorage.getItem('portal_token');
-      const body = { protocol: proto, url, serverId: server.id };
-      const r = await fetch('/api/open', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
-      });
-      if (!r.ok) throw new Error((await r.json()).error || 'Gagal');
-    } catch (e) { alert('Gagal: ' + e.message); }
+    const sshUrl = `ssh://${ip}${port && port !== 22 ? ':' + port : ''}`;
+    window.open(sshUrl, '_blank');
     return;
   }
 
-  // RDP + HTTP/HTTPS: token-based flow (jalan di client browser, bukan di server)
+  // RDP + HTTP/HTTPS: token-based flow (semua jalan di CLIENT browser)
   const protoLower = proto.toLowerCase();
   try {
     const result = await api.requestOpenToken(server.id, protoLower);
+
     if (proto === 'RDP') {
       // Auto-download RDP file
       const a = document.createElement('a');
-      a.href = `/api/tokens/rdp-file/${server.id}?token=${result.token}`;
+      a.href = `/api/tokens/rdp-file/${server.id}?token=${encodeURIComponent(result.token)}`;
       a.download = `${name}.rdp`;
       document.body.appendChild(a);
       a.click();
       a.remove();
+    } else if (pref === 'edge') {
+      // HTTP/HTTPS via Edge (microsoft-edge: protocol handler Windows)
+      window.open(`microsoft-edge:${window.location.origin}/api/tokens/launch/${server.id}?token=${encodeURIComponent(result.token)}`, '_blank');
     } else {
-      // HTTP/HTTPS: open in new tab
-      window.open(`/api/tokens/launch/${server.id}?token=${result.token}`, '_blank');
+      // HTTP/HTTPS: open di default browser client
+      window.open(`/api/tokens/launch/${server.id}?token=${encodeURIComponent(result.token)}`, '_blank');
     }
   } catch (e) { alert('Gagal: ' + e.message); }
 }
