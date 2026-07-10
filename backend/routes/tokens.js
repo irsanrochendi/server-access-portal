@@ -181,17 +181,21 @@ router.get('/rdp-file/:id', (req, res) => {
     const rdpContent = lines.join('\r\n') + '\r\n';
 
     // Log server access
-    db.prepare(`
-      INSERT INTO activity_logs (user_id, action, module, description, metadata, ip_address, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run(
-      tokenRecord.user_id,
-      'server_access',
-      'server',
-      `Membuka server ${server.name} via RDP (token)`,
-      JSON.stringify({ server_id: serverId, protocol: 'rdp', token_id: tokenRecord.id }),
-      req.ip
-    );
+    try {
+      db.prepare(`
+        INSERT INTO activity_logs (user_id, action, module, description, metadata, ip_address, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).run(
+        tokenRecord.user_id,
+        'server_access',
+        'server',
+        `Membuka server ${server.name} via RDP (token)`,
+        JSON.stringify({ server_id: serverId, protocol: 'rdp', token_id: tokenRecord.id }),
+        req.ip
+      );
+    } catch (logErr) {
+      console.error('Failed to log activity:', logErr);
+    }
 
     res.setHeader('Content-Type', 'application/x-rdp');
     res.setHeader('Content-Disposition', `attachment; filename="${server.name.replace(/[^a-zA-Z0-9_-]/g, '_')}.rdp"`);
@@ -232,35 +236,24 @@ router.get('/launch/:id', (req, res) => {
     }
 
     // Build target URL
-    let targetUrl = server.access_url || `http://${server.ip_address}${server.port ? ':' + server.port : ''}`;
-
-    // If auto-login enabled and credentials exist, embed in URL
-    const username = server.shared_username || '';
-    const password = decrypt(server.shared_password_encrypted);
-
-    if (server.auto_login_enabled && username && password) {
-      try {
-        const urlObj = new URL(targetUrl);
-        urlObj.username = encodeURIComponent(username);
-        urlObj.password = encodeURIComponent(password);
-        targetUrl = urlObj.toString();
-      } catch (e) {
-        // URL parse failed — leave as-is
-      }
-    }
+    const targetUrl = server.access_url || `http://${server.ip_address}${server.port ? ':' + server.port : ''}`;
 
     // Log server access
-    db.prepare(`
-      INSERT INTO activity_logs (user_id, action, module, description, metadata, ip_address, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run(
-      tokenRecord.user_id,
-      'server_access',
-      'server',
-      `Membuka server ${server.name} via HTTP (token)`,
-      JSON.stringify({ server_id: serverId, protocol: 'http', token_id: tokenRecord.id }),
-      req.ip
-    );
+    try {
+      db.prepare(`
+        INSERT INTO activity_logs (user_id, action, module, description, metadata, ip_address, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).run(
+        tokenRecord.user_id,
+        'server_access',
+        'server',
+        `Membuka server ${server.name} via HTTP (token)`,
+        JSON.stringify({ server_id: serverId, protocol: 'http', token_id: tokenRecord.id }),
+        req.ip
+      );
+    } catch (logErr) {
+      console.error('Failed to log activity:', logErr);
+    }
 
     res.redirect(302, targetUrl);
 
