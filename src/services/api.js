@@ -109,4 +109,8 @@ export const api = {
 
   // Activity
   logActivity: (data) => request('/logs/activity', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Token-based access
+  requestOpenToken: (id, protocol) =>
+    request(`/tokens/request/${id}`, { method: 'POST', body: JSON.stringify({ protocol }) }),
 };
