@@ -208,5 +208,24 @@ export function initDb() {
   d.exec(`CREATE INDEX IF NOT EXISTS idx_connection_logs_user_server ON connection_logs(user_id, server_id, connected_at DESC)`);
 
   // ─── v1.7.0: Server Grouping ──────────────────────────────────────────────
+
+  // ─── v2.2.0: Token-Based Server Access ────────────────────────────────
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS access_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token_hash TEXT NOT NULL UNIQUE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      server_id INTEGER NOT NULL REFERENCES servers(id) ON DELETE CASCADE,
+      protocol TEXT NOT NULL CHECK(protocol IN ('rdp','http','https','ssh')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT NOT NULL,
+      used_at TEXT DEFAULT NULL,
+      revoked INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_access_tokens_hash ON access_tokens(token_hash)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_access_tokens_expiry ON access_tokens(expires_at)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_access_tokens_user ON access_tokens(user_id)`);
+
   return d;
 }
