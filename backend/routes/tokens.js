@@ -90,17 +90,21 @@ router.post('/request/:id', authenticate, (req, res) => {
     `).run(tokenHash, req.user.id, serverId, protocol, expiresAt);
 
     // Log token request
-    db.prepare(`
-      INSERT INTO activity_logs (user_id, action, module, description, metadata, ip_address, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-    `).run(
-      req.user.id,
-      'token_request',
-      'server',
-      `Request token akses untuk server ${server.name}`,
-      JSON.stringify({ server_id: serverId, protocol }),
-      req.ip
-    );
+    try {
+      db.prepare(`
+        INSERT INTO activity_logs (user_id, action, module, description, metadata, ip_address, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      `).run(
+        req.user.id,
+        'token_request',
+        'server',
+        `Request token akses untuk server ${server.name}`,
+        JSON.stringify({ server_id: serverId, protocol }),
+        req.ip
+      );
+    } catch (logErr) {
+      console.error('Failed to log activity:', logErr);
+    }
 
     res.json({
       token,
@@ -139,6 +143,7 @@ router.get('/rdp-file/:id', (req, res) => {
 
     if (!tokenRecord) return res.status(401).json({ error: 'Token tidak valid' });
     if (tokenRecord.server_id !== serverId) return res.status(401).json({ error: 'Token tidak cocok dengan server' });
+    if (tokenRecord.protocol !== 'rdp') return res.status(400).json({ error: 'Token protocol mismatch' });
 
     const validation = validateAndConsumeToken(tokenHash, tokenRecord.user_id, serverId);
     if (!validation.valid) {
@@ -229,6 +234,7 @@ router.get('/launch/:id', (req, res) => {
 
     if (!tokenRecord) return res.status(401).json({ error: 'Token tidak valid' });
     if (tokenRecord.server_id !== serverId) return res.status(401).json({ error: 'Token tidak cocok dengan server' });
+    if (tokenRecord.protocol !== 'http' && tokenRecord.protocol !== 'https') return res.status(400).json({ error: 'Token protocol mismatch' });
 
     const validation = validateAndConsumeToken(tokenHash, tokenRecord.user_id, serverId);
     if (!validation.valid) {
@@ -247,8 +253,8 @@ router.get('/launch/:id', (req, res) => {
         tokenRecord.user_id,
         'server_access',
         'server',
-        `Membuka server ${server.name} via HTTP (token)`,
-        JSON.stringify({ server_id: serverId, protocol: 'http', token_id: tokenRecord.id }),
+        `Membuka server ${server.name} via ${tokenRecord.protocol.toUpperCase()} (token)`,
+        JSON.stringify({ server_id: serverId, protocol: tokenRecord.protocol, token_id: tokenRecord.id }),
         req.ip
       );
     } catch (logErr) {
