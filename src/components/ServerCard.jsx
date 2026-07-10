@@ -15,23 +15,39 @@ async function logActivity(action, module, description, metadata = {}) {
 
 async function openServer(server) {
   const proto = field(server, 'protocol', 'protocol')?.toUpperCase();
-  const ip = field(server, 'ip_address', 'ipAddress');
-  const port = field(server, 'port', 'port');
-  const url = field(server, 'access_url', 'accessUrl');
-  const pref = field(server, 'browser_pref', 'browserPref');
-  try {
-    const token = localStorage.getItem('portal_token');
-    const body = { protocol: proto, browser: pref || undefined, serverId: server.id };
-    if (proto === 'SSH') body.url = `${ip}${port && port !== 22 ? ':'+port : ''}`;
-    else if (proto === 'RDP') body.url = `${ip}${port && port !== 3389 ? ':'+port : ''}`;
-    else body.url = url;
-    const r = await fetch('/api/open', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
-    });
-    if (!r.ok) alert((await r.json()).error || 'Gagal');
+  const name = field(server, 'name', 'name');
 
-    // Log server access
-    await logActivity('server_access', 'server', `Membuka server ${server.name || server.id}`, { server_id: server.id, protocol: proto });
+  // SSH stays on the old manual flow
+  if (proto === 'SSH') {
+    const ip = field(server, 'ip_address', 'ipAddress');
+    const port = field(server, 'port', 'port');
+    const url = `ssh://${ip}${port && port !== 22 ? ':' + port : ''}`;
+    try {
+      const token = localStorage.getItem('portal_token');
+      const body = { protocol: proto, url, serverId: server.id };
+      const r = await fetch('/api/open', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error((await r.json()).error || 'Gagal');
+    } catch (e) { alert('Gagal: ' + e.message); }
+    return;
+  }
+
+  // RDP + HTTP/HTTPS: token-based flow
+  try {
+    const result = await api.requestOpenToken(server.id, proto);
+    if (proto === 'RDP') {
+      // Auto-download RDP file
+      const a = document.createElement('a');
+      a.href = `/api/tokens/rdp-file/${server.id}?token=${result.token}`;
+      a.download = `${name}.rdp`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    } else {
+      // HTTP/HTTPS: open in new tab
+      window.open(`/api/tokens/launch/${server.id}?token=${result.token}`, '_blank');
+    }
   } catch (e) { alert('Gagal: ' + e.message); }
 }
 
@@ -43,6 +59,8 @@ export default function ServerCard({ server, onCopyIp, index = 0 }) {
   const [creds, setCreds] = useState(null);
   const [loadingCreds, setLoadingCreds] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [credReason, setCredReason] = useState('');
+  const [showReasonDialog, setShowReasonDialog] = useState(false);
 
   const name = field(server, 'name', 'name');
   const ipAddress = field(server, 'ip_address', 'ipAddress');
@@ -71,17 +89,27 @@ export default function ServerCard({ server, onCopyIp, index = 0 }) {
     }
   };
 
-  const handleRevealCreds = async () => {
+  const handleRevealCreds = () => {
     if (creds) {
       setShowCredsModal(true);
       return;
     }
+    setShowReasonDialog(true);
+  };
+
+  const confirmRevealCreds = async (serverId) => {
+    if (!credReason.trim()) {
+      alert('Alasan diperlukan untuk melihat kredensial.');
+      return;
+    }
+    setShowReasonDialog(false);
     setLoadingCreds(true);
     try {
-      const res = await api.getServerCredentials(server.id);
+      const res = await api.getServerCredentials(serverId);
       setCreds(res);
       setShowCredsModal(true);
-      await logActivity('credential_access', 'server', `Mengakses kredensial server ${server.name}`, { server_id: server.id });
+      await logActivity('credential_access', 'server', `Mengakses kredensial server ${name} — Alasan: ${credReason}`, { server_id: serverId });
+      setCredReason('');
     } catch (err) {
       alert(err.message);
     } finally {
@@ -246,6 +274,55 @@ export default function ServerCard({ server, onCopyIp, index = 0 }) {
           <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold tracking-wide">Intranet Only</span>
         </div>
       </div>
+
+      {/* Reason Dialog */}
+      {showReasonDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg">
+                  <Lock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800 dark:text-white">Alasan melihat kredensial?</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">{name}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowReasonDialog(false); setCredReason(''); }}
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <textarea
+                value={credReason}
+                onChange={(e) => setCredReason(e.target.value)}
+                placeholder="Jelaskan alasan Anda perlu melihat kredensial server ini..."
+                className="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                rows={4}
+                autoFocus
+              />
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  onClick={() => { setShowReasonDialog(false); setCredReason(''); }}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={() => confirmRevealCreds(server.id)}
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold hover:from-indigo-500 hover:to-purple-500 transition-all shadow-md shadow-indigo-500/30"
+                >
+                  Konfirmasi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Credentials Modal */}
       {showCredsModal && (
