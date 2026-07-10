@@ -227,5 +227,11 @@ export function initDb() {
   d.exec(`CREATE INDEX IF NOT EXISTS idx_access_tokens_expiry ON access_tokens(expires_at)`);
   d.exec(`CREATE INDEX IF NOT EXISTS idx_access_tokens_user ON access_tokens(user_id)`);
 
+  // Migration: add metadata column to activity_logs (used by open.js, logs.js, tokens.js)
+  const aCols = d.prepare("PRAGMA table_info(activity_logs)").all().map(c => c.name);
+  if (!aCols.includes('metadata')) {
+    d.exec(`ALTER TABLE activity_logs ADD COLUMN metadata TEXT`);
+  }
+
   return d;
 }
