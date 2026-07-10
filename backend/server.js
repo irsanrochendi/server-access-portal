@@ -7,7 +7,7 @@ dotenv.config({ path: join(__dirname, '.env') });
 
 import express from 'express';
 import cors from 'cors';
-import { initDb } from './database.js';
+import { initDb, getDb } from './database.js';
 import authRoutes from './routes/auth.js';
 import serverRoutes from './routes/servers.js';
 import userRoutes from './routes/users.js';
@@ -66,6 +66,20 @@ startAutoBackup();
 
 // Health
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
+
+// ─── Token cleanup ─────────────────────────────────────────────────────
+function cleanupExpiredTokens() {
+  try {
+    const result = getDb().prepare(
+      `DELETE FROM access_tokens WHERE expires_at < datetime('now') AND used_at IS NULL`
+    ).run();
+    if (result.changes > 0) {
+      console.log(`Token cleanup: removed ${result.changes} expired tokens`);
+    }
+  } catch (err) { /* DB may not be ready yet at startup */ }
+}
+setTimeout(cleanupExpiredTokens, 30_000);
+setInterval(cleanupExpiredTokens, 5 * 60_000);
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🚀 Backend running at http://localhost:${PORT}`);
