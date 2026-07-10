@@ -34,8 +34,9 @@ async function openServer(server) {
   }
 
   // RDP + HTTP/HTTPS: token-based flow
+  const protoLower = proto.toLowerCase();
   try {
-    const result = await api.requestOpenToken(server.id, proto);
+    const result = await api.requestOpenToken(server.id, protoLower);
     if (proto === 'RDP') {
       // Auto-download RDP file
       const a = document.createElement('a');
