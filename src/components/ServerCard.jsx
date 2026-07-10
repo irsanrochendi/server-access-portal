@@ -16,8 +16,6 @@ async function logActivity(action, module, description, metadata = {}) {
 async function openServer(server) {
   const proto = field(server, 'protocol', 'protocol')?.toUpperCase();
   const name = field(server, 'name', 'name');
-  const pref = field(server, 'browser_pref', 'browserPref');
-
   // SSH stays on the old manual flow
   if (proto === 'SSH') {
     const ip = field(server, 'ip_address', 'ipAddress');
@@ -34,21 +32,7 @@ async function openServer(server) {
     return;
   }
 
-  // RDP + HTTP/HTTPS: token-based flow
-  // Tapi kalau browser_pref diisi, pake old /api/open flow biar browser preference jalan
-  if (proto !== 'RDP' && pref) {
-    const url = field(server, 'access_url', 'accessUrl');
-    try {
-      const token = localStorage.getItem('portal_token');
-      const body = { protocol: proto, browser: pref, serverId: server.id, url };
-      const r = await fetch('/api/open', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
-      });
-      if (!r.ok) throw new Error((await r.json()).error || 'Gagal');
-    } catch (e) { alert('Gagal: ' + e.message); }
-    return;
-  }
-
+  // RDP + HTTP/HTTPS: token-based flow (jalan di client browser, bukan di server)
   const protoLower = proto.toLowerCase();
   try {
     const result = await api.requestOpenToken(server.id, protoLower);
