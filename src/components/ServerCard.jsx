@@ -16,12 +16,13 @@ async function logActivity(action, module, description, metadata = {}) {
 async function openServer(server) {
   const proto = field(server, 'protocol', 'protocol')?.toUpperCase();
   const name = field(server, 'name', 'name');
+  const pref = field(server, 'browser_pref', 'browserPref');
 
   // SSH stays on the old manual flow
   if (proto === 'SSH') {
     const ip = field(server, 'ip_address', 'ipAddress');
     const port = field(server, 'port', 'port');
-    const url = `ssh://${ip}${port && port !== 22 ? ':' + port : ''}`;
+    const url = `${ip}${port && port !== 22 ? ':' + port : ''}`;
     try {
       const token = localStorage.getItem('portal_token');
       const body = { protocol: proto, url, serverId: server.id };
@@ -34,6 +35,20 @@ async function openServer(server) {
   }
 
   // RDP + HTTP/HTTPS: token-based flow
+  // Tapi kalau browser_pref diisi, pake old /api/open flow biar browser preference jalan
+  if (proto !== 'RDP' && pref) {
+    const url = field(server, 'access_url', 'accessUrl');
+    try {
+      const token = localStorage.getItem('portal_token');
+      const body = { protocol: proto, browser: pref, serverId: server.id, url };
+      const r = await fetch('/api/open', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error((await r.json()).error || 'Gagal');
+    } catch (e) { alert('Gagal: ' + e.message); }
+    return;
+  }
+
   const protoLower = proto.toLowerCase();
   try {
     const result = await api.requestOpenToken(server.id, protoLower);
