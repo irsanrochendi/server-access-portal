@@ -50,8 +50,9 @@ router.get('/', (req, res) => {
     countParams.push(priority);
   }
   const { cnt: total } = db.prepare(countSql).get(...countParams);
+  const totalPages = Math.ceil(total / pageLimit);
 
-  res.json({ announcements, total, page: parseInt(page), limit: pageLimit });
+  res.json({ announcements, total, totalPages, page: parseInt(page), limit: pageLimit });
 });
 
 // GET /api/announcements/:id — detail

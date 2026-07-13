@@ -68,7 +68,8 @@ router.get('/topics', (req, res) => {
   const topics = db.prepare(sql).all(...params);
   const totalSql = "SELECT COUNT(*) as cnt FROM forum_topics t WHERE t.is_deleted = 0" + (category_id ? ' AND t.category_id = ?' : '');
   const total = db.prepare(totalSql).get(...(category_id ? [category_id] : []));
-  res.json({ topics, total: total.cnt, page: parseInt(page), limit: parseInt(limit) });
+  const totalPages = Math.ceil(total.cnt / parseInt(limit));
+  res.json({ topics, total: total.cnt, totalPages, page: parseInt(page), limit: parseInt(limit) });
 });
 
 // GET /api/forum/topics/:id
