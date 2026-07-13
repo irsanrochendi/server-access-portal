@@ -26,6 +26,14 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.zip', '.rar'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!allowed.includes(ext)) {
+      return cb(new Error('Tipe file tidak diizinkan'));
+    }
+    cb(null, true);
+  },
   limits: { fileSize: 10 * 1024 * 1024 },
 });
 
