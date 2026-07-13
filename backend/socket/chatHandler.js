@@ -154,6 +154,12 @@ export function initChatSocket(io) {
         return;
       }
 
+      if (content.length > 5000) {
+        socket.emit('chat:error', { message: 'Pesan terlalu panjang (maksimal 5000 karakter)' });
+        if (typeof ack === 'function') ack({ error: 'Pesan terlalu panjang' });
+        return;
+      }
+
       const result = checkRoomAccess(user, room);
       if (!result.allowed) {
         socket.emit('chat:error', { message: result.error });
@@ -202,6 +208,8 @@ export function initChatSocket(io) {
     // --- chat:typing — user is typing ---
     socket.on('chat:typing', ({ room }) => {
       if (!room) return;
+      const access = checkRoomAccess(user, room);
+      if (!access.allowed) return;
       socket.to(room).emit('chat:user-typing', {
         userId: user.id,
         userName: user.name,
@@ -212,6 +220,8 @@ export function initChatSocket(io) {
     // --- chat:stop-typing — user stopped typing ---
     socket.on('chat:stop-typing', ({ room }) => {
       if (!room) return;
+      const access = checkRoomAccess(user, room);
+      if (!access.allowed) return;
       socket.to(room).emit('chat:user-stop-typing', {
         userId: user.id,
         userName: user.name,
