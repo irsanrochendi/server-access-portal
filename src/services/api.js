@@ -113,4 +113,51 @@ export const api = {
   // Token-based access
   requestOpenToken: (id, protocol) =>
     request(`/tokens/request/${id}`, { method: 'POST', body: JSON.stringify({ protocol }) }),
+
+  // Announcements
+  getAnnouncements: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.division) q.set('division', params.division);
+    if (params.pinned) q.set('pinned', params.pinned);
+    if (params.page) q.set('page', params.page);
+    const qs = q.toString();
+    return request(`/announcements${qs ? '?' + qs : ''}`);
+  },
+  getAnnouncement: (id) => request(`/announcements/${id}`),
+  createAnnouncement: (data) => request('/announcements', { method: 'POST', body: JSON.stringify(data) }),
+  updateAnnouncement: (id, data) => request(`/announcements/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteAnnouncement: (id) => request(`/announcements/${id}`, { method: 'DELETE' }),
+  togglePinAnnouncement: (id) => request(`/announcements/${id}/pin`, { method: 'PATCH' }),
+
+  // Chat
+  getChatRooms: () => request('/chat/rooms'),
+  getChatMessages: (room, params = {}) => {
+    const q = new URLSearchParams();
+    if (params.limit) q.set('limit', params.limit);
+    if (params.before) q.set('before', params.before);
+    const qs = q.toString();
+    return request(`/chat/rooms/${encodeURIComponent(room)}/messages${qs ? '?' + qs : ''}`);
+  },
+  deleteChatMessage: (id) => request(`/chat/messages/${id}`, { method: 'DELETE' }),
+
+  // Forum
+  getForumCategories: () => request('/forum/categories'),
+  createForumCategory: (data) => request('/forum/categories', { method: 'POST', body: JSON.stringify(data) }),
+  updateForumCategory: (id, data) => request(`/forum/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteForumCategory: (id) => request(`/forum/categories/${id}`, { method: 'DELETE' }),
+  getForumTopics: (params = {}) => {
+    const q = new URLSearchParams();
+    if (params.category_id) q.set('category_id', params.category_id);
+    if (params.page) q.set('page', params.page);
+    if (params.sort) q.set('sort', params.sort);
+    const qs = q.toString();
+    return request(`/forum/topics${qs ? '?' + qs : ''}`);
+  },
+  getForumTopic: (id) => request(`/forum/topics/${id}`),
+  createForumTopic: (data) => request('/forum/topics', { method: 'POST', body: JSON.stringify(data) }),
+  deleteForumTopic: (id) => request(`/forum/topics/${id}`, { method: 'DELETE' }),
+  createForumReply: (topicId, data) => request(`/forum/topics/${topicId}/replies`, { method: 'POST', body: JSON.stringify(data) }),
+  deleteForumReply: (id) => request(`/forum/replies/${id}`, { method: 'DELETE' }),
+  toggleLockTopic: (id) => request(`/forum/topics/${id}/lock`, { method: 'PATCH' }),
+  togglePinTopic: (id) => request(`/forum/topics/${id}/pin`, { method: 'PATCH' }),
 };

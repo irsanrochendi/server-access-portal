@@ -233,5 +233,119 @@ export function initDb() {
     d.exec(`ALTER TABLE activity_logs ADD COLUMN metadata TEXT`);
   }
 
+  // === TASK 1: New tables for announcements, chat, and forum ===
+
+  // announcements: company-wide announcements
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS announcements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      author_id INTEGER NOT NULL REFERENCES users(id),
+      priority TEXT NOT NULL DEFAULT 'normal' CHECK(priority IN ('low','normal','high','urgent')),
+      is_pinned INTEGER NOT NULL DEFAULT 0,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+      expires_at TEXT DEFAULT NULL
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_author ON announcements(author_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_priority ON announcements(priority)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_created ON announcements(created_at DESC)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(is_active, created_at DESC)`);
+
+  // chat_messages: real-time chat messages
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sender_id INTEGER NOT NULL REFERENCES users(id),
+      content TEXT NOT NULL,
+      room TEXT NOT NULL DEFAULT 'general',
+      reply_to INTEGER DEFAULT NULL REFERENCES chat_messages(id) ON DELETE SET NULL,
+      attachment_url TEXT DEFAULT NULL,
+      attachment_name TEXT DEFAULT NULL,
+      is_deleted INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_chat_room ON chat_messages(room, created_at DESC)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_chat_sender ON chat_messages(sender_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_chat_reply ON chat_messages(reply_to)`);
+
+  // forum_categories: forum category definitions
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS forum_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL DEFAULT '',
+      icon TEXT DEFAULT 'message-circle',
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      is_locked INTEGER NOT NULL DEFAULT 0,
+      topic_count INTEGER NOT NULL DEFAULT 0,
+      reply_count INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_cat_sort ON forum_categories(sort_order)`);
+
+  // forum_topics: forum topics within categories
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS forum_topics (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_id INTEGER NOT NULL REFERENCES forum_categories(id) ON DELETE CASCADE,
+      author_id INTEGER NOT NULL REFERENCES users(id),
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      is_pinned INTEGER NOT NULL DEFAULT 0,
+      is_locked INTEGER NOT NULL DEFAULT 0,
+      is_deleted INTEGER NOT NULL DEFAULT 0,
+      view_count INTEGER NOT NULL DEFAULT 0,
+      reply_count INTEGER NOT NULL DEFAULT 0,
+      last_reply_at TEXT DEFAULT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_topic_cat ON forum_topics(category_id, created_at DESC)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_topic_author ON forum_topics(author_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_topic_pinned ON forum_topics(is_pinned, updated_at DESC)`);
+
+  // forum_replies: replies to forum topics
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS forum_replies (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      topic_id INTEGER NOT NULL REFERENCES forum_topics(id) ON DELETE CASCADE,
+      author_id INTEGER NOT NULL REFERENCES users(id),
+      content TEXT NOT NULL,
+      parent_id INTEGER DEFAULT NULL REFERENCES forum_replies(id) ON DELETE CASCADE,
+      is_deleted INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_reply_topic ON forum_replies(topic_id, created_at ASC)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_reply_author ON forum_replies(author_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_reply_parent ON forum_replies(parent_id)`);
+
+  // Seed default forum categories if none exist
+  const catCount = d.prepare('SELECT COUNT(*) as cnt FROM forum_categories').get();
+  if (catCount.cnt === 0) {
+    const insertCat = d.prepare('INSERT INTO forum_categories (name, description, icon, sort_order) VALUES (?, ?, ?, ?)');
+    const defaultCats = [
+      ['Umum', 'Diskusi dan pertanyaan umum', 'message-circle', 1],
+      ['Teknis', 'Topik teknis dan solusi', 'code', 2],
+      ['Pengumuman', 'Pengumuman dan informasi penting', 'megaphone', 3],
+      ['Lainnya', 'Topik lainnya', 'folder', 4]
+    ];
+    const seedInsert = d.transaction((cats) => {
+      for (const cat of cats) {
+        insertCat.run(...cat);
+      }
+    });
+    seedInsert(defaultCats);
+  }
+
   return d;
 }

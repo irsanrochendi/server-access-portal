@@ -1,5 +1,6 @@
-import dotenv from 'dotenv';
+﻿import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
+import { createServer } from 'http';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -23,12 +24,18 @@ import exportRoutes from './routes/export.js';
 import adRoutes from './routes/ad.js';
 import backupRoutes from './routes/backup.js';
 import tokensRoutes from './routes/tokens.js';
+import announcementRoutes from './routes/announcements.js';
+import forumRoutes from './routes/forum.js';
+import chatRoutes from './routes/chat.js';
+import { Server } from 'socket.io';
+import { initChatSocket } from './socket/chatHandler.js';
 
 import uploadRoutes from './routes/upload.js';
 import { initBackupSettings } from './services/backup.js';
 import { startAutoBackup } from './services/autoBackupScheduler.js';
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 4000;
 
 // Init DB
@@ -59,6 +66,18 @@ app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use('/api/db', dbRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/tokens', tokensRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/forum', forumRoutes);
+app.use('/api/chat', chatRoutes);
+
+// Socket.IO real-time chat
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:80', 'http://localhost:81'],
+    methods: ['GET', 'POST'],
+  },
+});
+initChatSocket(io);
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();
@@ -67,7 +86,7 @@ startAutoBackup();
 // Health
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// ─── Token cleanup ─────────────────────────────────────────────────────
+// â”€â”€â”€ Token cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function cleanupExpiredTokens() {
   try {
     const result = getDb().prepare(
@@ -85,16 +104,16 @@ function cleanupExpiredTokens() {
 setTimeout(cleanupExpiredTokens, 30_000);
 setInterval(cleanupExpiredTokens, 5 * 60_000);
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🚀 Backend running at http://localhost:${PORT}`);
-  console.log('📋 API endpoints:');
-  console.log('   POST /api/auth/login    — Login');
-  console.log('   GET  /api/servers       — List servers');
-  console.log('   GET  /api/servers/stats — Stats');
-  console.log('   POST /api/servers       — Create (admin)');
-  console.log('   GET  /api/users         — List (admin)');
-  console.log('   GET  /api/roles         — List (admin)');
-  console.log('   GET  /api/logs          — Activity logs (admin)');
-  console.log('   GET  /api/settings      — Settings (admin)');
-  console.log('   POST /api/status/check-all — Check all servers');
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`\nðŸš€ Backend running at http://localhost:${PORT}`);
+  console.log('ðŸ“‹ API endpoints:');
+  console.log('   POST /api/auth/login    â€” Login');
+  console.log('   GET  /api/servers       â€” List servers');
+  console.log('   GET  /api/servers/stats â€” Stats');
+  console.log('   POST /api/servers       â€” Create (admin)');
+  console.log('   GET  /api/users         â€” List (admin)');
+  console.log('   GET  /api/roles         â€” List (admin)');
+  console.log('   GET  /api/logs          â€” Activity logs (admin)');
+  console.log('   GET  /api/settings      â€” Settings (admin)');
+  console.log('   POST /api/status/check-all â€” Check all servers');
 });
