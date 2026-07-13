@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
 import AdminServers from './pages/admin/AdminServers';
+import ChatPage from './pages/chat/ChatPage';
 import AdminUsers from './pages/admin/AdminUsers';
 import OnlineUsersAdmin from './pages/admin/OnlineUsers';
 import OnlineUsers from './pages/OnlineUsers';
@@ -37,6 +38,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/online-users" element={<OnlineUsers />} />
         <Route path="/announcements" element={<AnnouncementsPage />} />
+        <Route path="/chat" element={<ChatPage />} />
 
         {/* Admin routes */}
         <Route
