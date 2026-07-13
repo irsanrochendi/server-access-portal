@@ -1,5 +1,6 @@
 ﻿import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
+import { createServer } from 'http';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -26,12 +27,15 @@ import tokensRoutes from './routes/tokens.js';
 import announcementRoutes from './routes/announcements.js';
 import forumRoutes from './routes/forum.js';
 import chatRoutes from './routes/chat.js';
+import { Server } from 'socket.io';
+import { initChatSocket } from './socket/chatHandler.js';
 
 import uploadRoutes from './routes/upload.js';
 import { initBackupSettings } from './services/backup.js';
 import { startAutoBackup } from './services/autoBackupScheduler.js';
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 4000;
 
 // Init DB
@@ -66,6 +70,15 @@ app.use('/api/announcements', announcementRoutes);
 app.use('/api/forum', forumRoutes);
 app.use('/api/chat', chatRoutes);
 
+// Socket.IO real-time chat
+const io = new Server(server, {
+  cors: {
+    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:80', 'http://localhost:81'],
+    methods: ['GET', 'POST'],
+  },
+});
+initChatSocket(io);
+
 // Init backup settings & auto-backup scheduler
 initBackupSettings();
 startAutoBackup();
@@ -91,7 +104,7 @@ function cleanupExpiredTokens() {
 setTimeout(cleanupExpiredTokens, 30_000);
 setInterval(cleanupExpiredTokens, 5 * 60_000);
 
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`\nðŸš€ Backend running at http://localhost:${PORT}`);
   console.log('ðŸ“‹ API endpoints:');
   console.log('   POST /api/auth/login    â€” Login');
