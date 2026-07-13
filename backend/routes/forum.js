@@ -106,18 +106,28 @@ router.delete('/topics/:id', (req, res) => {
   res.json({ message: 'Topik dihapus' });
 });
 
-// POST /api/forum/topics/:id/replies (flat replies; no parent_id in schema)
+// POST /api/forum/topics/:id/replies (supports nested replies, max 2 levels)
 router.post('/topics/:id/replies', (req, res) => {
   const db = getDb();
   const topic = db.prepare('SELECT * FROM forum_topics WHERE id = ? AND is_deleted = 0').get(req.params.id);
   if (!topic) return res.status(404).json({ error: 'Topik tidak ditemukan' });
   if (topic.is_locked) return res.status(403).json({ error: 'Topik ini dikunci, tidak dapat menambah balasan' });
-  const { content } = req.body;
+  const { content, parent_id } = req.body;
   if (!content) return res.status(400).json({ error: 'Konten balasan wajib diisi' });
-  const info = db.prepare('INSERT INTO forum_replies (topic_id, author_id, content) VALUES (?, ?, ?)').run(topic.id, req.user.id, content);
-  db.prepare("UPDATE forum_topics SET reply_count = reply_count + 1, last_reply_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(topic.id);
-  const reply = db.prepare("SELECT r.*, u.name as author_name FROM forum_replies r LEFT JOIN users u ON r.author_id = u.id WHERE r.id = ?").get(info.lastInsertRowid);
-  res.status(201).json({ reply });
+  if (parent_id) {
+    const parent = db.prepare('SELECT * FROM forum_replies WHERE id = ? AND topic_id = ? AND is_deleted = 0').get(parent_id, topic.id);
+    if (!parent) return res.status(404).json({ error: 'Balasan induk tidak ditemukan' });
+    if (parent.parent_id) return res.status(400).json({ error: 'Balasan hanya bisa 2 level. Balas langsung ke topik atau ke balasan level 1.' });
+    const info = db.prepare('INSERT INTO forum_replies (topic_id, content, author_id, parent_id) VALUES (?, ?, ?, ?)').run(topic.id, content, req.user.id, parent_id);
+    db.prepare("UPDATE forum_topics SET reply_count = reply_count + 1, last_reply_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(topic.id);
+    const reply = db.prepare("SELECT r.*, u.name as author_name FROM forum_replies r LEFT JOIN users u ON r.author_id = u.id WHERE r.id = ?").get(info.lastInsertRowid);
+    res.status(201).json({ reply });
+  } else {
+    const info = db.prepare('INSERT INTO forum_replies (topic_id, author_id, content) VALUES (?, ?, ?)').run(topic.id, req.user.id, content);
+    db.prepare("UPDATE forum_topics SET reply_count = reply_count + 1, last_reply_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(topic.id);
+    const reply = db.prepare("SELECT r.*, u.name as author_name FROM forum_replies r LEFT JOIN users u ON r.author_id = u.id WHERE r.id = ?").get(info.lastInsertRowid);
+    res.status(201).json({ reply });
+  }
 });
 
 // DELETE /api/forum/replies/:id (author or admin)

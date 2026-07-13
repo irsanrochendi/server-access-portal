@@ -317,6 +317,7 @@ export function initDb() {
       topic_id INTEGER NOT NULL REFERENCES forum_topics(id) ON DELETE CASCADE,
       author_id INTEGER NOT NULL REFERENCES users(id),
       content TEXT NOT NULL,
+      parent_id INTEGER DEFAULT NULL REFERENCES forum_replies(id) ON DELETE CASCADE,
       is_deleted INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -324,6 +325,7 @@ export function initDb() {
   `);
   d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_reply_topic ON forum_replies(topic_id, created_at ASC)`);
   d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_reply_author ON forum_replies(author_id)`);
+  d.exec(`CREATE INDEX IF NOT EXISTS idx_forum_reply_parent ON forum_replies(parent_id)`);
 
   // Seed default forum categories if none exist
   const catCount = d.prepare('SELECT COUNT(*) as cnt FROM forum_categories').get();
