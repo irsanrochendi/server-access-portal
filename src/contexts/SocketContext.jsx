@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
+﻿import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 
@@ -139,6 +139,6 @@ export function SocketProvider({ children }) {
 
 export function useSocket() {
   const ctx = useContext(SocketContext);
-  if (!ctx) throw new Error('useSocket must be used within SocketProvider');
+  if (!ctx) throw new Error('useSocket harus digunakan di dalam SocketProvider');
   return ctx;
 }
