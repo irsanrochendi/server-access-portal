@@ -263,6 +263,8 @@ export function initDb() {
       content TEXT NOT NULL,
       room TEXT NOT NULL DEFAULT 'general',
       reply_to INTEGER DEFAULT NULL REFERENCES chat_messages(id) ON DELETE SET NULL,
+      attachment_url TEXT DEFAULT NULL,
+      attachment_name TEXT DEFAULT NULL,
       is_deleted INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )

@@ -25,6 +25,7 @@ import backupRoutes from './routes/backup.js';
 import tokensRoutes from './routes/tokens.js';
 import announcementRoutes from './routes/announcements.js';
 import forumRoutes from './routes/forum.js';
+import chatRoutes from './routes/chat.js';
 
 import uploadRoutes from './routes/upload.js';
 import { initBackupSettings } from './services/backup.js';
@@ -63,6 +64,7 @@ app.use('/api/backup', backupRoutes);
 app.use('/api/tokens', tokensRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/forum', forumRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();
