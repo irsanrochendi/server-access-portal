@@ -13,11 +13,17 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Megaphone,
+  MessageCircle,
+  MessagesSquare,
 } from 'lucide-react';
 
 // General nav — visible to ALL users (staff + admin)
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/announcements', icon: Megaphone, label: 'Pengumuman' },
+  { to: '/chat', icon: MessageCircle, label: 'Chat' },
+  { to: '/forum', icon: MessagesSquare, label: 'Forum' },
   { to: '/online-users', icon: Users, label: 'Online Users' },
 ];
 
