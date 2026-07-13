@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -8,6 +8,8 @@ import Profile from './pages/Profile';
 import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
 import AdminServers from './pages/admin/AdminServers';
 import ChatPage from './pages/chat/ChatPage';
+import ForumPage from './pages/forum/ForumPage';
+import ForumTopicPage from './pages/forum/ForumTopicPage';
 import AdminUsers from './pages/admin/AdminUsers';
 import OnlineUsersAdmin from './pages/admin/OnlineUsers';
 import OnlineUsers from './pages/OnlineUsers';
@@ -39,6 +41,8 @@ function App() {
         <Route path="/online-users" element={<OnlineUsers />} />
         <Route path="/announcements" element={<AnnouncementsPage />} />
         <Route path="/chat" element={<ChatPage />} />
+        <Route path="/forum" element={<ForumPage />} />
+        <Route path="/forum/topics/:id" element={<ForumTopicPage />} />
 
         {/* Admin routes */}
         <Route
