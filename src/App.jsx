@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
 import AdminServers from './pages/admin/AdminServers';
 import AdminUsers from './pages/admin/AdminUsers';
 import OnlineUsersAdmin from './pages/admin/OnlineUsers';
@@ -35,6 +36,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/online-users" element={<OnlineUsers />} />
+        <Route path="/announcements" element={<AnnouncementsPage />} />
 
         {/* Admin routes */}
         <Route
