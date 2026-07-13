@@ -147,7 +147,7 @@ export const api = {
   deleteForumCategory: (id) => request(`/forum/categories/${id}`, { method: 'DELETE' }),
   getForumTopics: (params = {}) => {
     const q = new URLSearchParams();
-    if (params.category) q.set('category', params.category);
+    if (params.category_id) q.set('category_id', params.category_id);
     if (params.page) q.set('page', params.page);
     if (params.sort) q.set('sort', params.sort);
     const qs = q.toString();
