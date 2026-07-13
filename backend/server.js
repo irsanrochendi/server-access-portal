@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+﻿import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
@@ -23,6 +23,7 @@ import exportRoutes from './routes/export.js';
 import adRoutes from './routes/ad.js';
 import backupRoutes from './routes/backup.js';
 import tokensRoutes from './routes/tokens.js';
+import announcementRoutes from './routes/announcements.js';
 
 import uploadRoutes from './routes/upload.js';
 import { initBackupSettings } from './services/backup.js';
@@ -59,6 +60,7 @@ app.use('/uploads', express.static(join(__dirname, 'uploads')));
 app.use('/api/db', dbRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/tokens', tokensRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();
@@ -67,7 +69,7 @@ startAutoBackup();
 // Health
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// ─── Token cleanup ─────────────────────────────────────────────────────
+// â”€â”€â”€ Token cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function cleanupExpiredTokens() {
   try {
     const result = getDb().prepare(
@@ -86,15 +88,15 @@ setTimeout(cleanupExpiredTokens, 30_000);
 setInterval(cleanupExpiredTokens, 5 * 60_000);
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`\n🚀 Backend running at http://localhost:${PORT}`);
-  console.log('📋 API endpoints:');
-  console.log('   POST /api/auth/login    — Login');
-  console.log('   GET  /api/servers       — List servers');
-  console.log('   GET  /api/servers/stats — Stats');
-  console.log('   POST /api/servers       — Create (admin)');
-  console.log('   GET  /api/users         — List (admin)');
-  console.log('   GET  /api/roles         — List (admin)');
-  console.log('   GET  /api/logs          — Activity logs (admin)');
-  console.log('   GET  /api/settings      — Settings (admin)');
-  console.log('   POST /api/status/check-all — Check all servers');
+  console.log(`\nðŸš€ Backend running at http://localhost:${PORT}`);
+  console.log('ðŸ“‹ API endpoints:');
+  console.log('   POST /api/auth/login    â€” Login');
+  console.log('   GET  /api/servers       â€” List servers');
+  console.log('   GET  /api/servers/stats â€” Stats');
+  console.log('   POST /api/servers       â€” Create (admin)');
+  console.log('   GET  /api/users         â€” List (admin)');
+  console.log('   GET  /api/roles         â€” List (admin)');
+  console.log('   GET  /api/logs          â€” Activity logs (admin)');
+  console.log('   GET  /api/settings      â€” Settings (admin)');
+  console.log('   POST /api/status/check-all â€” Check all servers');
 });
