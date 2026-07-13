@@ -102,15 +102,15 @@ export function SocketProvider({ children }) {
     };
   }, [user]);
 
-  const sendMessage = useCallback((room, content) => {
+  const sendMessage = useCallback((room, content, fileUrl, fileName) => {
     if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('chat:send-message', { room, content });
+      socketRef.current.emit('chat:message', { room, content, file_url: fileUrl, file_name: fileName });
     }
   }, []);
 
   const joinRoom = useCallback((room) => {
     if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit('chat:join-room', { room });
+      socketRef.current.emit('chat:join', room);
     }
   }, []);
 
@@ -118,6 +118,10 @@ export function SocketProvider({ children }) {
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit('chat:typing', { room });
     }
+  }, []);
+
+  const clearMessages = useCallback((room) => {
+    setMessages(prev => ({ ...prev, [room]: [] }));
   }, []);
 
   const value = {
@@ -128,6 +132,7 @@ export function SocketProvider({ children }) {
     sendMessage,
     joinRoom,
     emitTyping,
+    clearMessages,
   };
 
   return (

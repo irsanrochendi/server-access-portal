@@ -147,14 +147,14 @@ export function initChatSocket(io) {
     });
 
     // --- chat:message — send a message to the current room ---
-    socket.on('chat:message', ({ room, content, replyTo }, ack) => {
-      if (!room || !content || !content.trim()) {
+    socket.on('chat:message', ({ room, content, replyTo, file_url, file_name }, ack) => {
+      if (!room || (!content && !file_url)) {
         socket.emit('chat:error', { message: 'Pesan tidak boleh kosong' });
         if (typeof ack === 'function') ack({ error: 'Pesan tidak boleh kosong' });
         return;
       }
 
-      if (content.length > 5000) {
+      if (content && content.length > 5000) {
         socket.emit('chat:error', { message: 'Pesan terlalu panjang (maksimal 5000 karakter)' });
         if (typeof ack === 'function') ack({ error: 'Pesan terlalu panjang' });
         return;
@@ -171,9 +171,9 @@ export function initChatSocket(io) {
       try {
         // Persist message
         const insertResult = db.prepare(`
-          INSERT INTO chat_messages (sender_id, content, room, reply_to, created_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
-        `).run(user.id, content.trim(), room, replyTo || null);
+          INSERT INTO chat_messages (sender_id, content, room, reply_to, attachment_url, attachment_name, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+        `).run(user.id, content ? content.trim() : '', room, replyTo || null, file_url || null, file_name || null);
 
         // Fetch the full message with sender info
         const message = db.prepare(`

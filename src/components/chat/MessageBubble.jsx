@@ -19,19 +19,19 @@ export default function MessageBubble({ message, isOwn }) {
             ? 'bg-blue-600 text-white rounded-br-md'
             : 'bg-white dark:bg-white/10 text-slate-900 dark:text-white rounded-bl-md border border-slate-200 dark:border-white/5'
         }`}>
-          {message.file_url ? (
+          {(message.attachment_url || message.file_url) ? (
             <a
-              href={message.file_url}
+              href={message.attachment_url || message.file_url}
               target="_blank"
               rel="noopener noreferrer"
               className={`flex items-center gap-2 ${isOwn ? 'text-white hover:text-blue-100' : 'text-blue-600 dark:text-blue-400 hover:underline'}`}
             >
               <FileText className="w-4 h-4" />
-              <span className="text-sm font-medium">{message.file_name || 'File'}</span>
+              <span className="text-sm font-medium">{message.attachment_name || message.file_name || 'File'}</span>
               <Download className="w-3.5 h-3.5 ml-1" />
             </a>
           ) : (
-            <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
+            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
           )}
         </div>
 
