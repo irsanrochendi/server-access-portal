@@ -11,7 +11,9 @@ export function SocketProvider({ children }) {
   const [connected, setConnected] = useState(false);
   const [messages, setMessages] = useState({});
   const [typingUsers, setTypingUsers] = useState({});
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const typingTimeoutsRef = useRef({});
+  const onChatPageRef = useRef(false);
 
   // Connect / disconnect based on auth state
   useEffect(() => {
@@ -58,6 +60,10 @@ export function SocketProvider({ children }) {
         const roomMessages = prev[room] || [];
         return { ...prev, [room]: [...roomMessages, message] };
       });
+      // Increment unread if not on chat page
+      if (!onChatPageRef.current) {
+        setUnreadChatCount(prev => prev + 1);
+      }
     });
 
     socket.on('chat:user-typing', ({ userName, room }) => {
@@ -124,15 +130,28 @@ export function SocketProvider({ children }) {
     setMessages(prev => ({ ...prev, [room]: [] }));
   }, []);
 
+  // Chat badge helpers
+  const markChatAsRead = useCallback(() => {
+    setUnreadChatCount(0);
+    onChatPageRef.current = true;
+  }, []);
+
+  const markChatAsLeft = useCallback(() => {
+    onChatPageRef.current = false;
+  }, []);
+
   const value = {
     socket: socketRef.current,
     connected,
     messages,
     typingUsers,
+    unreadChatCount,
     sendMessage,
     joinRoom,
     emitTyping,
     clearMessages,
+    markChatAsRead,
+    markChatAsLeft,
   };
 
   return (

@@ -17,7 +17,13 @@ export default function ChatPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
 
-  const { messages, typingUsers, sendMessage, joinRoom, emitTyping, clearMessages } = useSocket();
+  const { messages, typingUsers, sendMessage, joinRoom, emitTyping, clearMessages, markChatAsRead, markChatAsLeft } = useSocket();
+
+  // Mark chat as read when on this page
+  useEffect(() => {
+    markChatAsRead();
+    return () => markChatAsLeft();
+  }, []);
 
   // Load rooms
   useEffect(() => {

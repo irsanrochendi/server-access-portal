@@ -194,11 +194,22 @@ router.get('/rooms/:room/messages', (req, res) => {
 });
 
 // POST /api/chat/rooms/:room/upload
-router.post('/rooms/:room/upload', upload.single('file'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'File tidak ditemukan' });
+router.post('/rooms/:room/upload', (req, res, next) => {
+  upload.single('file')(req, res, (err) => {
+    if (err) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'File terlalu besar. Maksimal 10MB' });
+      }
+      if (err.message === 'Tipe file tidak diizinkan') {
+        return res.status(400).json({ error: 'Tipe file tidak diizinkan. Gunakan: PDF, DOC, TXT, PNG, JPG, GIF, ZIP, RAR' });
+      }
+      return res.status(400).json({ error: err.message || 'Gagal upload file' });
+    }
+    if (!req.file) return res.status(400).json({ error: 'File tidak ditemukan' });
 
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ file_url: fileUrl, file_name: req.file.originalname });
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ file_url: fileUrl, file_name: req.file.originalname });
+  });
 });
 
 // DELETE /api/chat/messages/:id

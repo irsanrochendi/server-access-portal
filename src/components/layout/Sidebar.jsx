@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAnnouncements } from '../../contexts/AnnouncementContext';
+import { useSocket } from '../../contexts/SocketContext';
 import {
   LayoutDashboard,
   Server,
@@ -23,7 +24,7 @@ import {
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/announcements', icon: Megaphone, label: 'Pengumuman', badge: 'announcements' },
-  { to: '/chat', icon: MessageCircle, label: 'Chat' },
+  { to: '/chat', icon: MessageCircle, label: 'Chat', badge: 'chat' },
   { to: '/forum', icon: MessagesSquare, label: 'Forum' },
   { to: '/online-users', icon: Users, label: 'Online Users' },
 ];
@@ -44,12 +45,16 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
 
   const closeMobile = () => setIsMobileOpen(false);
 
-  // Badge for announcements
-  const { newCount } = useAnnouncements();
+  // Badge counts
+  const { newCount: announceCount } = useAnnouncements();
+  const { unreadChatCount } = useSocket();
 
   const renderNavItem = (item) => {
     const isActive = location.pathname.startsWith(item.to);
-    const showBadge = item.badge === 'announcements' && newCount > 0;
+    let badgeCount = 0;
+    if (item.badge === 'announcements') badgeCount = announceCount;
+    if (item.badge === 'chat') badgeCount = unreadChatCount;
+    const showBadge = badgeCount > 0;
 
     return (
       <NavLink
@@ -75,7 +80,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
         )}
         {showBadge && (
           <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white shadow-md">
-            {newCount > 99 ? '99+' : newCount}
+            {badgeCount > 99 ? '99+' : badgeCount}
           </span>
         )}
       </NavLink>
