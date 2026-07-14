@@ -121,6 +121,7 @@ export default function ChatWidget() {
     messages,
     typingUsers,
     unreadChatCount,
+    unreadByRoom,
     connected,
     sendMessage,
     joinRoom,
@@ -251,6 +252,7 @@ export default function ChatWidget() {
     if (!isOpen) {
       setEntering(true);
       setIsOpen(true);
+      markChatAsRead(); // clear all unread on open
       // Allow DOM paint then animate in
       requestAnimationFrame(() => {
         requestAnimationFrame(() => setEntering(false));
@@ -264,6 +266,8 @@ export default function ChatWidget() {
   const handleSelectRoom = (room) => {
     setActiveRoom(room);
     setRoomDropdownOpen(false);
+    // Clear per-room unread count (reset all; SocketContext clears all on markChatAsRead)
+    markChatAsRead();
   };
 
   // Close dropdown on click outside
@@ -422,8 +426,21 @@ export default function ChatWidget() {
                       <span className="text-sm font-semibold text-slate-800 dark:text-white/95 truncate">
                         {activeRoom?.name || 'Pilih channel'}
                       </span>
+                      {activeRoom && unreadByRoom[activeRoom.id] > 0 && (
+                        <span className="
+                          ml-1.5 flex-shrink-0
+                          min-w-[18px] h-[18px] px-1
+                          flex items-center justify-center
+                          rounded-full
+                          bg-red-500
+                          text-[9px] font-bold text-white
+                          shadow-[0_0_8px_rgba(239,68,68,0.4)]
+                        ">
+                          {unreadByRoom[activeRoom.id] > 99 ? '99+' : unreadByRoom[activeRoom.id]}
+                        </span>
+                      )}
                       {activeRoom && roomMessages.length > 0 && (
-                        <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 flex-shrink-0">
+                        <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-200 dark:bg-white/10 text-slate-600 dark:text-white/70 flex-shrink-0">
                           {roomMessages.length}
                         </span>
                       )}
@@ -461,7 +478,20 @@ export default function ChatWidget() {
                             `}
                           >
                             <HashIcon className="w-[13px] h-[13px] flex-shrink-0 opacity-50" />
-                            <span className="truncate">{room.name}</span>
+                            <span className="truncate flex-1 min-w-0">{room.name}</span>
+                            {/* Per-room unread badge */}
+                            {unreadByRoom[room.id] > 0 && (
+                              <span className="
+                                flex-shrink-0
+                                min-w-[18px] h-[18px] px-1
+                                flex items-center justify-center
+                                rounded-full
+                                bg-blue-500
+                                text-[9px] font-bold text-white
+                              ">
+                                {unreadByRoom[room.id] > 99 ? '99+' : unreadByRoom[room.id]}
+                              </span>
+                            )}
                           </button>
                         ))}
                         {rooms.length === 0 && (

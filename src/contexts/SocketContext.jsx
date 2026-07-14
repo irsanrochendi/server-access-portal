@@ -12,6 +12,8 @@ export function SocketProvider({ children }) {
   const [messages, setMessages] = useState({});
   const [typingUsers, setTypingUsers] = useState({});
   const [unreadChatCount, setUnreadChatCount] = useState(0);
+  // Per-room unread counts: { 'roomId': count }
+  const [unreadByRoom, setUnreadByRoom] = useState({});
   const typingTimeoutsRef = useRef({});
   const onChatPageRef = useRef(false);
 
@@ -55,14 +57,15 @@ export function SocketProvider({ children }) {
     });
 
     socket.on('chat:new-message', (message) => {
+      const room = message.room || 'general';
       setMessages((prev) => {
-        const room = message.room || 'general';
         const roomMessages = prev[room] || [];
         return { ...prev, [room]: [...roomMessages, message] };
       });
-      // Increment unread if not on chat page
+      // Per-room unread
       if (!onChatPageRef.current) {
         setUnreadChatCount(prev => prev + 1);
+        setUnreadByRoom(prev => ({ ...prev, [room]: (prev[room] || 0) + 1 }));
       }
     });
 
@@ -130,9 +133,9 @@ export function SocketProvider({ children }) {
     setMessages(prev => ({ ...prev, [room]: [] }));
   }, []);
 
-  // Chat badge helpers
   const markChatAsRead = useCallback(() => {
     setUnreadChatCount(0);
+    setUnreadByRoom({});
     onChatPageRef.current = true;
   }, []);
 
@@ -143,10 +146,10 @@ export function SocketProvider({ children }) {
   const value = {
     socket: socketRef.current,
     connected,
-    connected,
     messages,
     typingUsers,
     unreadChatCount,
+    unreadByRoom,
     sendMessage,
     joinRoom,
     emitTyping,
