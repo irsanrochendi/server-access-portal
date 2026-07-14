@@ -34,9 +34,12 @@
 ### 🔧 Technical Implementation
 
 - **Per-room unread tracking** — `unreadByRoom` state map per room ID dengan counter
-- **Badge clearing** — `markChatAsRead()` reset semua unread (total + per-room)
+- **Badge clearing** — `markChatAsRead()` reset semua unread; `markRoomAsRead(roomId)` reset hanya satu room
 - **Badge colors** — red (total toggle + active header), blue (per-room dropdown list)
 - **SocketContext fix** — duplicate `connected` export dihapus, proper per-room message counting
+- **Single source of truth** — `unreadChatCount` dihapus, `totalUnread` di-derive dari `unreadByRoom`
+- **Message deduplication** — `roomMessages` filter by `id` Set untuk hindari duplicate bubbles
+- **No double-call** — `[isOpen]` useEffect tidak lagi panggil `markChatAsRead()` (avoided double invocation on open)
 
 ### 🎨 UI Improvements
 
