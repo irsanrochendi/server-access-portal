@@ -120,7 +120,6 @@ export default function ChatWidget() {
   const {
     messages,
     typingUsers,
-    unreadChatCount,
     unreadByRoom,
     connected,
     sendMessage,
@@ -130,6 +129,9 @@ export default function ChatWidget() {
     markChatAsLeft,
     markRoomAsRead,
   } = useSocket();
+
+  // Derive total unread from per-room counts
+  const totalUnread = Object.values(unreadByRoom).reduce((a, b) => a + b, 0);
 
   // ── UI State ──
   const [isOpen, setIsOpen] = useState(false);
@@ -293,12 +295,21 @@ export default function ChatWidget() {
     return () => document.removeEventListener('keydown', handler);
   }, [handleToggle]);
 
-  // ── Merge history + real-time messages ──
+  // ── Merge history + real-time messages (deduplicated by id) ──
   const roomMessages = activeRoom
-    ? [
-        ...(historyMessages[activeRoom.id] || []),
-        ...(messages[activeRoom.id] || []),
-      ]
+    ? (() => {
+        const seen = new Set();
+        const all = [
+          ...(historyMessages[activeRoom.id] || []),
+          ...(messages[activeRoom.id] || []),
+        ];
+        return all.filter((m) => {
+          if (m.id == null) return true; // no id → include
+          if (seen.has(m.id)) return false;
+          seen.add(m.id);
+          return true;
+        });
+      })()
     : [];
 
   if (activeRoom) {
@@ -338,7 +349,7 @@ export default function ChatWidget() {
               Chat
             </span>
             {/* Unread badge */}
-            {unreadChatCount > 0 && (
+            {totalUnread > 0 && (
               <span className="
                 absolute -top-1 -right-1
                 min-w-[20px] h-5 px-1.5
@@ -349,7 +360,7 @@ export default function ChatWidget() {
                 shadow-[0_0_12px_rgba(239,68,68,0.5)]
                 animate-[pulse-glow_2s_ease-in-out_infinite]
               ">
-                {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                {totalUnread > 99 ? '99+' : totalUnread}
               </span>
             )}
           </>
