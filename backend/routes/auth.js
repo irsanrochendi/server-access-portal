@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
-import { getDb } from '../database.js';
+import { getDb, now } from '../database.js';
 import { generateToken } from '../services/auth.js';
 import { authenticate } from '../middleware/auth.js';
 import { authenticateAD, getAdConfig } from '../services/adService.js';
@@ -26,8 +26,8 @@ router.post('/login', async (req, res) => {
           if (!localUser.is_active) return res.status(403).json({ error: 'Akun dinonaktifkan' });
 
           db.prepare(`INSERT INTO activity_logs (user_id, action, module, description, ip_address, created_at)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))`)
-            .run(localUser.id, 'login', 'auth', `User ${localUser.name} login (local)`, req.ip);
+            VALUES (?, ?, ?, ?, ?, ?)`)
+            .run(localUser.id, 'login', 'auth', `User ${localUser.name} login (local)`, req.ip, now());
 
           const token = generateToken(localUser);
           const { password_hash, ...userData } = localUser;
@@ -63,8 +63,8 @@ router.post('/login', async (req, res) => {
         // Role hanya di-update lewat Sync AD (halaman Users).
 
         db.prepare(`INSERT INTO activity_logs (user_id, action, module, description, ip_address, created_at)
-          VALUES (?, ?, ?, ?, ?, datetime('now'))`)
-          .run(portalUser.id, 'login', 'auth', `User ${portalUser.name} login via AD`, req.ip);
+          VALUES (?, ?, ?, ?, ?, ?)`)
+          .run(portalUser.id, 'login', 'auth', `User ${portalUser.name} login via AD`, req.ip, now());
 
         const token = generateToken(portalUser);
         const { password_hash, ...userData } = portalUser;
@@ -92,8 +92,8 @@ router.post('/login', async (req, res) => {
 // POST /api/auth/logout
 router.post('/logout', authenticate, (req, res) => {
   getDb().prepare(`INSERT INTO activity_logs (user_id, action, module, description, ip_address, created_at)
-    VALUES (?, ?, ?, ?, ?, datetime('now'))`)
-    .run(req.user.id, 'logout', 'auth', `User ${req.user.name} logout`, req.ip);
+    VALUES (?, ?, ?, ?, ?, ?)`)
+    .run(req.user.id, 'logout', 'auth', `User ${req.user.name} logout`, req.ip, now());
   res.json({ message: 'Logout berhasil' });
 });
 

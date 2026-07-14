@@ -1,4 +1,4 @@
-import { getDb } from '../database.js';
+import { getDb, now } from '../database.js';
 import { verifyToken } from '../services/auth.js';
 
 /**
@@ -168,12 +168,14 @@ export function initChatSocket(io) {
       }
 
       const db = getDb();
+      const timestamp = now();
+
       try {
         // Persist message
         const insertResult = db.prepare(`
           INSERT INTO chat_messages (sender_id, content, room, reply_to, attachment_url, attachment_name, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-        `).run(user.id, content ? content.trim() : '', room, replyTo || null, file_url || null, file_name || null);
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `).run(user.id, content ? content.trim() : '', room, replyTo || null, file_url || null, file_name || null, timestamp);
 
         // Fetch the full message with sender info
         const message = db.prepare(`

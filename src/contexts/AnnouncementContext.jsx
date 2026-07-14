@@ -3,64 +3,54 @@ import { api } from '../services/api';
 
 const AnnouncementContext = createContext();
 
-// Session key for tracking if user has visited announcements page
-// Use localStorage so it persists across page refreshes
-const VISITED_KEY = 'ann_visited';
+const LAST_VISIT_KEY = 'ann_last_visit';
+
+function getLastVisit() {
+  const v = localStorage.getItem(LAST_VISIT_KEY);
+  return v ? parseInt(v, 10) : 0;
+}
 
 export function AnnouncementProvider({ children }) {
-  const [announcements, setAnnouncements] = useState([]);
   const [newCount, setNewCount] = useState(0);
-  const [hasVisited, setHasVisited] = useState(
-    localStorage.getItem(VISITED_KEY) === 'true'
-  );
   const intervalRef = useRef(null);
 
-  // Fetch announcements
   const fetchAnnouncements = useCallback(async () => {
     try {
       const res = await api.getAnnouncements({ page: 1 });
       const items = res.announcements || [];
-      setAnnouncements(items);
+      const lastVisit = getLastVisit();
 
-      // Show badge count based on visit status
-      if (hasVisited) {
-        setNewCount(0);
-      } else {
+      if (lastVisit === 0) {
         setNewCount(items.length);
+      } else {
+        const count = items.filter(a => {
+          // SQLite created_at is UTC, so append 'Z' before parsing
+          const t = new Date(a.created_at + 'Z').getTime();
+          return t > lastVisit;
+        }).length;
+        setNewCount(count);
       }
     } catch (err) {
-      console.error('Fetch announcements error:', err);
+      // silently fail
     }
-  }, [hasVisited]);
+  }, []);
 
-  // Initial fetch and polling
   useEffect(() => {
     fetchAnnouncements();
-
-    // Poll every 30 seconds
     intervalRef.current = setInterval(fetchAnnouncements, 30000);
-
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [fetchAnnouncements]);
 
-  // Mark as read when visiting announcements page
   const markAllAsRead = useCallback(() => {
-    localStorage.setItem(VISITED_KEY, 'true');
-    setHasVisited(true);
+    const now = Date.now();
+    localStorage.setItem(LAST_VISIT_KEY, now.toString());
     setNewCount(0);
   }, []);
 
-  const value = {
-    newCount,
-    announcements,
-    markAllAsRead,
-    refresh: fetchAnnouncements,
-  };
-
   return (
-    <AnnouncementContext.Provider value={value}>
+    <AnnouncementContext.Provider value={{ newCount, markAllAsRead, refresh: fetchAnnouncements }}>
       {children}
     </AnnouncementContext.Provider>
   );

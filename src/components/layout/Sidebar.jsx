@@ -49,8 +49,6 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
 
   const renderNavItem = (item) => {
     const isActive = location.pathname.startsWith(item.to);
-
-    // Get badge count if specified
     const showBadge = item.badge === 'announcements' && newCount > 0;
 
     return (
@@ -60,7 +58,7 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
         onClick={closeMobile}
         className={`
           flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
-          transition-colors duration-150 group relative
+          transition-colors duration-150 group relative overflow-visible
           ${isActive
             ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
             : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800'
@@ -75,13 +73,8 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
             {item.label}
           </div>
         )}
-        {/* Badge */}
         {showBadge && (
-          <span className={`
-            absolute flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full
-            bg-red-500 text-white shadow-md
-            ${collapsed ? 'top-0 right-0' : '-top-1 -right-1'}
-          `}>
+          <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full bg-red-500 text-white shadow-md">
             {newCount > 99 ? '99+' : newCount}
           </span>
         )}

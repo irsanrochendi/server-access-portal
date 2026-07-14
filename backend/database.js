@@ -5,7 +5,18 @@ import { dirname, join } from 'path';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DB_PATH = join(__dirname, 'portal.db');
 
+// Set timezone to Jakarta (WIB, UTC+7)
+process.env.TZ = 'Asia/Jakarta';
+
 let db;
+
+/**
+ * Get current timestamp in Jakarta timezone as ISO string for SQLite.
+ * Use this for INSERT/UPDATE operations that need consistent timestamps.
+ */
+export function now() {
+  return new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Jakarta' }).replace(' ', 'T');
+}
 
 export function getDb() {
   if (!db) {
