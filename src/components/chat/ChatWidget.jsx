@@ -128,6 +128,7 @@ export default function ChatWidget() {
     emitTyping,
     markChatAsRead,
     markChatAsLeft,
+    markRoomAsRead,
   } = useSocket();
 
   // ── UI State ──
@@ -234,13 +235,12 @@ export default function ChatWidget() {
   };
 
   // ── Mark read / left based on open state ──
+  // markChatAsRead is called directly in handleToggle (avoids double-call)
   useEffect(() => {
-    if (isOpen) {
-      markChatAsRead();
-    } else {
+    if (!isOpen) {
       markChatAsLeft();
     }
-  }, [isOpen]);
+  }, [isOpen, markChatAsLeft]);
 
   // ── Auto-scroll ──
   useEffect(() => {
@@ -262,12 +262,11 @@ export default function ChatWidget() {
     }
   }, [isOpen]);
 
-  // ── Room selector ──
+  // ── Room selector — clear only this room's unread ──
   const handleSelectRoom = (room) => {
     setActiveRoom(room);
     setRoomDropdownOpen(false);
-    // Clear per-room unread count (reset all; SocketContext clears all on markChatAsRead)
-    markChatAsRead();
+    markRoomAsRead(room.id);
   };
 
   // Close dropdown on click outside

@@ -133,6 +133,17 @@ export function SocketProvider({ children }) {
     setMessages(prev => ({ ...prev, [room]: [] }));
   }, []);
 
+  // Clear unread for a specific room only (used on room switch)
+  const markRoomAsRead = useCallback((roomId) => {
+    setUnreadByRoom((prev) => {
+      const next = { ...prev };
+      delete next[roomId];
+      return next;
+    });
+    onChatPageRef.current = true;
+  }, []);
+
+  // Clear all unread (used when opening widget)
   const markChatAsRead = useCallback(() => {
     setUnreadChatCount(0);
     setUnreadByRoom({});
@@ -156,6 +167,7 @@ export function SocketProvider({ children }) {
     clearMessages,
     markChatAsRead,
     markChatAsLeft,
+    markRoomAsRead,
   };
 
   return (
