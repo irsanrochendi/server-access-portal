@@ -1,5 +1,43 @@
 # Changelog — Server Access Portal AST
 
+## v2.3.0 — Floating Chat Widget + Upload Whitelist (2026-07-14)
+
+### 💬 Floating Chat Widget (replaces page-based chat)
+
+- **Floating popup** — chat widget di kanan bawah layar, accessible dari semua halaman
+- **Light/Dark mode** — widget adapt ke tema global, warna berubah saat toggle tema
+- **Premium glass design** — Double-Bezel (Doppelrand) architecture, backdrop-blur, shadow depth
+- **Custom room support** — buat room baru langsung dari widget dengan tombol **+**
+- **Message counter badge** — jumlah pesan tampil di header widget
+- **Keyboard shortcut** — `Ctrl+K` untuk toggle widget
+- **Click outside / Escape** — auto-close saat klik di luar atau tekan Escape
+- **Create room inline** — form buat room langsung di header widget, tanpa modal
+- **Remove /chat route** — menu Chat dihapus dari sidebar, widget jadi satu-satunya interface chat
+
+### 🐛 Chat Bug Fixes
+
+- **Double-reverse fix** — history chat tidak lagi terbalik (API sudah chronological, widget reverse多余)
+- **Socket connect retry** — `joinRoom` di-retry saat socket connect untuk hindari race condition
+- **Custom room access** — `checkRoomAccess` sekarang support custom numeric room IDs (room `1`, `2`, dll)
+- **GET messages route** — `GET /api/chat/rooms/:room/messages` sekarang support custom rooms
+- **Opacity animation removed** — pesan chat langsung terlihat tanpa animasi fade
+
+### 📎 Chat Upload Whitelist
+
+- **Configurable whitelist** — admin bisa atur format file yang boleh diupload lewat chat
+- **Admin Settings UI** — editor whitelist ada di tab **Umum** halaman Settings
+- **Frontend validation** — file dicek extensinya sebelum upload, error message jelas kalau ditolak
+- **Tooltip info** — hover tombol paperclip menampilkan format yang diizinkan
+- **Default formats** — `.pdf, .doc, .docx, .txt, .png, .jpg, .jpeg, .gif, .zip, .rar, .exe, .msi, .7z`
+
+### 🎨 UI Improvements
+
+- **Plus Jakarta Sans font** — upgrade typeface dari Inter/Roboto generic
+- **MessageBubble contrast** — bubble chat lebih kontras di dark mode (`bg-[#3a3a4a]`)
+- **ChatInput styling** — input field dan file preview lebih terlihat di kedua tema
+
+---
+
 ## v2.2.0 — Chat Room Management & Announcement Badge (2026-07-14)
 
 ### 💬 Chat Room Management
