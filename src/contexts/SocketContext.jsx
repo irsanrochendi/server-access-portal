@@ -38,6 +38,8 @@ export function SocketProvider({ children }) {
     socket.on('connect', () => {
       console.log('Socket connected:', socket.id);
       setConnected(true);
+      // Expose socket globally for other contexts (e.g. AnnouncementContext)
+      window.__socket = socket;
     });
 
     socket.on('connect_error', (err) => {

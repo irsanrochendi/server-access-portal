@@ -3,6 +3,13 @@ import { getDb } from '../database.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = Router();
+
+// Socket.IO instance — set by server.js
+let io;
+export function setAnnouncementIO(socketIO) {
+  io = socketIO;
+}
+
 router.use(authenticate);
 
 // GET /api/announcements — list with filters
@@ -96,6 +103,11 @@ router.post('/', authorize('admin'), (req, res) => {
     `INSERT INTO activity_logs (user_id, action, module, description, ip_address, created_at)
      VALUES (?, 'create', 'announcements', ?, ?, datetime('now'))`
   ).run(req.user.id, `Membuat pengumuman: ${title}`, req.ip);
+
+  // Notify all connected clients about the new announcement
+  if (io) {
+    io.emit('announcement:new', { announcement });
+  }
 
   res.status(201).json({ announcement });
 });

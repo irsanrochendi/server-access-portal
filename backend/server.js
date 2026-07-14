@@ -24,7 +24,7 @@ import exportRoutes from './routes/export.js';
 import adRoutes from './routes/ad.js';
 import backupRoutes from './routes/backup.js';
 import tokensRoutes from './routes/tokens.js';
-import announcementRoutes from './routes/announcements.js';
+import announcementRoutes, { setAnnouncementIO } from './routes/announcements.js';
 import forumRoutes from './routes/forum.js';
 import chatRoutes from './routes/chat.js';
 import { Server } from 'socket.io';
@@ -82,6 +82,9 @@ const io = new Server(server, {
   },
 });
 initChatSocket(io);
+
+// Share io with announcement routes for real-time badge updates
+setAnnouncementIO(io);
 
 // Init backup settings & auto-backup scheduler
 initBackupSettings();
