@@ -1,10 +1,10 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import TopicCard from '../../components/forum/TopicCard';
 import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
-import { MessagesSquare, Plus, Filter } from 'lucide-react';
+import { MessagesSquare, Plus } from 'lucide-react';
 
 export default function ForumPage() {
   const { isAdmin } = useAuth();
@@ -29,7 +29,6 @@ export default function ForumPage() {
       setTotalPages(result.totalPages || 1);
     } catch (err) {
       console.error('Forum load error:', err);
-      alert(err.message);
     } finally {
       setLoading(false);
     }
@@ -38,8 +37,9 @@ export default function ForumPage() {
   const loadCategories = async () => {
     try {
       const cats = await api.getForumCategories();
-      setCategories(cats || []);
-      if (cats.length > 0 && !newCategory) setNewCategory(String(cats[0].id));
+      const catList = cats.categories || [];
+      setCategories(catList);
+      if (catList.length > 0 && !newCategory) setNewCategory(String(catList[0].id));
     } catch (err) {
       console.error('Load categories error:', err);
     }
@@ -76,7 +76,7 @@ export default function ForumPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -98,7 +98,7 @@ export default function ForumPage() {
         <select
           value={filterCategory}
           onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
-          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-slate-900 dark:text-white"
+          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white"
         >
           <option value="">Semua Kategori</option>
           {categories.map(c => (
@@ -108,7 +108,7 @@ export default function ForumPage() {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-slate-900 dark:text-white"
+          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white"
         >
           <option value="latest">Terbaru</option>
           <option value="popular">Terpopuler</option>
@@ -119,7 +119,7 @@ export default function ForumPage() {
       {loading ? (
         <div className="space-y-3">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-20 bg-white dark:bg-white/5 rounded-xl animate-pulse" />
+            <div key={i} className="h-20 bg-slate-100 dark:bg-white/5 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : topics.length === 0 ? (
@@ -143,7 +143,7 @@ export default function ForumPage() {
               key={p}
               onClick={() => setPage(p)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                p === page ? 'bg-blue-600 text-white' : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'
+                p === page ? 'bg-blue-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'
               }`}
             >
               {p}
@@ -161,7 +161,7 @@ export default function ForumPage() {
               value={newCategory}
               onChange={(e) => setNewCategory(e.target.value)}
               required
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white"
             >
               <option value="">Pilih Kategori</option>
               {categories.map(c => (
@@ -177,7 +177,7 @@ export default function ForumPage() {
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Judul topik..."
               required
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -188,7 +188,7 @@ export default function ForumPage() {
               placeholder="Tulis topik diskusi..."
               rows={5}
               required
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
           </div>
           <div className="flex justify-end gap-2">

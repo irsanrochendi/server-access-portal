@@ -233,6 +233,27 @@ export function initDb() {
     d.exec(`ALTER TABLE activity_logs ADD COLUMN metadata TEXT`);
   }
 
+  // divisions: organizational divisions for chat rooms
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS divisions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT DEFAULT '',
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  // Seed default divisions if none exist
+  const divCount = d.prepare('SELECT COUNT(*) as cnt FROM divisions').get();
+  if (divCount.cnt === 0) {
+    const insertDiv = d.prepare('INSERT INTO divisions (name, description) VALUES (?, ?)');
+    insertDiv.run('IT', 'Divisi Teknologi Informasi');
+    insertDiv.run('HRD', 'Divisi Human Resource Development');
+    insertDiv.run('Finance', 'Divisi Keuangan');
+    insertDiv.run('Marketing', 'Divisi Marketing');
+  }
+
   // === TASK 1: New tables for announcements, chat, and forum ===
 
   // announcements: company-wide announcements
@@ -254,6 +275,19 @@ export function initDb() {
   d.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_priority ON announcements(priority)`);
   d.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_created ON announcements(created_at DESC)`);
   d.exec(`CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(is_active, created_at DESC)`);
+
+  // chat_rooms: custom chat rooms
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS chat_rooms (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT DEFAULT '',
+      type TEXT NOT NULL DEFAULT 'public' CHECK(type IN ('public', 'private')),
+      created_by INTEGER NOT NULL REFERENCES users(id),
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
 
   // chat_messages: real-time chat messages
   d.exec(`

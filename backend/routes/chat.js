@@ -44,6 +44,26 @@ router.get('/rooms', (req, res) => {
 
   const rooms = [{ id: 'general', name: 'General', type: 'public' }];
 
+  // Get custom rooms (created by users)
+  const customRooms = db.prepare(`
+    SELECT cr.*,
+      (SELECT COUNT(*) FROM chat_messages cm WHERE cm.room = cr.id AND cm.is_deleted = 0) as message_count
+    FROM chat_rooms cr
+    WHERE cr.is_active = 1 AND (cr.created_by = ? OR cr.type = 'public')
+    ORDER BY cr.created_at DESC
+  `).all(user.id);
+
+  for (const room of customRooms) {
+    rooms.push({
+      id: String(room.id),
+      name: room.name,
+      type: room.type,
+      description: room.description || '',
+      created_at: room.created_at,
+    });
+  }
+
+  // Division rooms
   if (user.division) {
     const divisionRoom = db.prepare(
       'SELECT * FROM divisions WHERE name = ? AND is_active = 1'
@@ -60,6 +80,56 @@ router.get('/rooms', (req, res) => {
   }
 
   res.json({ rooms });
+});
+
+// POST /api/chat/rooms - Create new chat room
+router.post('/rooms', (req, res) => {
+  const db = getDb();
+  const user = req.user;
+  const { name, type = 'public', description = '' } = req.body;
+
+  if (!name || name.trim().length < 2) {
+    return res.status(400).json({ error: 'Nama room minimal 2 karakter' });
+  }
+
+  if (name.length > 50) {
+    return res.status(400).json({ error: 'Nama room maksimal 50 karakter' });
+  }
+
+  // Create room
+  const result = db.prepare(`
+    INSERT INTO chat_rooms (name, description, type, created_by)
+    VALUES (?, ?, ?, ?)
+  `).run(name.trim(), description, type, user.id);
+
+  const room = db.prepare('SELECT * FROM chat_rooms WHERE id = ?').get(result.lastInsertRowid);
+
+  res.status(201).json({ room: { id: String(room.id), name: room.name, description: room.description, type: room.type } });
+});
+
+// DELETE /api/chat/rooms/:id - Delete chat room (admin or creator)
+router.delete('/rooms/:id', (req, res) => {
+  const db = getDb();
+  const user = req.user;
+  const roomId = parseInt(req.params.id);
+
+  if (isNaN(roomId)) {
+    return res.status(400).json({ error: 'Room ID tidak valid' });
+  }
+
+  const room = db.prepare('SELECT * FROM chat_rooms WHERE id = ? AND is_active = 1').get(roomId);
+  if (!room) {
+    return res.status(404).json({ error: 'Room tidak ditemukan' });
+  }
+
+  if (user.role !== 'admin' && room.created_by !== user.id) {
+    return res.status(403).json({ error: 'Anda tidak memiliki akses untuk menghapus room ini' });
+  }
+
+  // Soft delete
+  db.prepare('UPDATE chat_rooms SET is_active = 0 WHERE id = ?').run(roomId);
+
+  res.json({ message: 'Room berhasil dihapus' });
 });
 
 // GET /api/chat/rooms/:room/messages

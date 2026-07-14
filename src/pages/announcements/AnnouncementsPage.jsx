@@ -1,37 +1,43 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAnnouncements } from '../../contexts/AnnouncementContext';
 import { api } from '../../services/api';
 import AnnouncementCard from '../../components/announcements/AnnouncementCard';
-import AnnouncementModal from '../../components/announcements/AnnouncementModal';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
 import Badge from '../../components/ui/Badge';
-import { Megaphone, Search, Plus } from 'lucide-react';
+import { Megaphone, Plus } from 'lucide-react';
 
 export default function AnnouncementsPage() {
   const { isAdmin } = useAuth();
+  const { markAllAsRead } = useAnnouncements();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState('');
-  const [filterDivision, setFilterDivision] = useState('');
-  const [divisions, setDivisions] = useState([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newContent, setNewContent] = useState('');
+  const [newPriority, setNewPriority] = useState('normal');
+  const [submitting, setSubmitting] = useState(false);
 
+  // Mark as read only once when page loads (not in dependency array)
   useEffect(() => {
     loadAnnouncements();
-    loadDivisions();
-  }, [page, filterDivision]);
+  }, [page]);
+
+  useEffect(() => {
+    markAllAsRead();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadAnnouncements = async () => {
     try {
       setLoading(true);
-      const params = { page };
-      if (filterDivision) params.division = filterDivision;
-      const res = await api.getAnnouncements(params);
+      const res = await api.getAnnouncements({ page });
       setAnnouncements(res.announcements || []);
       setTotalPages(res.totalPages || 1);
     } catch (err) {
@@ -41,38 +47,44 @@ export default function AnnouncementsPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchDivisions = async () => {
-      try {
-        const res = await fetch('/api/divisions', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('portal_token')}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setDivisions(data.divisions || []);
-        }
-      } catch (err) {
-        // Silently fail; divisions optional
-        console.error('Failed to load divisions:', err);
-      }
-    };
-    fetchDivisions();
-  }, []);
-
-  const handleCreate = async (data) => {
-    await api.createAnnouncement(data);
-    loadAnnouncements();
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    if (!newTitle.trim() || !newContent.trim()) return;
+    setSubmitting(true);
+    try {
+      await api.createAnnouncement({
+        title: newTitle.trim(),
+        content: newContent.trim(),
+        priority: newPriority,
+      });
+      setNewTitle('');
+      setNewContent('');
+      setShowCreateModal(false);
+      loadAnnouncements();
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Hapus pengumuman ini?')) return;
-    await api.deleteAnnouncement(id);
-    loadAnnouncements();
+    try {
+      await api.deleteAnnouncement(id);
+      loadAnnouncements();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const handleTogglePin = async (id) => {
-    await api.togglePinAnnouncement(id);
-    loadAnnouncements();
+    try {
+      await api.togglePinAnnouncement(id);
+      loadAnnouncements();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const filtered = announcements.filter(a => {
@@ -82,13 +94,17 @@ export default function AnnouncementsPage() {
   });
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Pengumuman</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Informasi dan pengumuman perusahaan
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+            <Megaphone className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Pengumuman</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">Informasi dan pengumuman perusahaan</p>
+          </div>
         </div>
         {isAdmin && (
           <Button onClick={() => setShowCreateModal(true)}>
@@ -97,64 +113,43 @@ export default function AnnouncementsPage() {
         )}
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Cari pengumuman..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <select
-          value={filterDivision}
-          onChange={(e) => { setFilterDivision(e.target.value); setPage(1); }}
-          className="px-3 py-2 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Semua Divisi</option>
-          {divisions.map(d => (
-            <option key={d.id} value={String(d.id)}>{d.name}</option>
-          ))}
-        </select>
+      {/* Search */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Cari pengumuman..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full px-4 py-2.5 pl-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       {/* List */}
       {loading ? (
         <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-28 bg-gray-100 dark:bg-white/5 rounded-2xl animate-pulse" />
+            <div key={i} className="h-24 bg-slate-100 dark:bg-white/5 rounded-xl animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-slate-500 dark:text-slate-400">
-          <Megaphone className="w-12 h-12 mx-auto mb-3 opacity-40" />
-          <p className="font-medium">Belum ada pengumuman</p>
-          {isAdmin && <p className="text-sm mt-1">Klik "Buat Pengumuman" untuk membuat yang pertama</p>}
+        <div className="text-center py-16">
+          <Megaphone className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+          <p className="text-slate-500 dark:text-slate-400">Belum ada pengumuman</p>
         </div>
       ) : (
         <div className="space-y-3">
           {filtered.map(a => (
-            <div key={a.id} className="relative group/card">
+            <div key={a.id} className="relative group">
               <AnnouncementCard
                 announcement={a}
                 onClick={() => { setSelectedAnnouncement(a); setShowDetailModal(true); }}
               />
               {isAdmin && (
-                <div className="absolute top-3 right-3 opacity-0 group-hover/card:opacity-100 transition-opacity flex gap-1">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleTogglePin(a.id); }}
-                    className={`p-1.5 rounded-lg text-xs ${a.is_pinned ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600' : 'bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-amber-500'}`}
-                    title={a.is_pinned ? 'Unpin' : 'Pin'}
-                  >
+                <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => handleTogglePin(a.id)} className="p-1.5 rounded-lg bg-white/90 dark:bg-slate-700/90 text-slate-500 hover:text-amber-500">
                     📌
                   </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleDelete(a.id); }}
-                    className="p-1.5 rounded-lg bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20"
-                    title="Hapus"
-                  >
+                  <button onClick={() => handleDelete(a.id)} className="p-1.5 rounded-lg bg-white/90 dark:bg-slate-700/90 text-slate-500 hover:text-red-500">
                     🗑️
                   </button>
                 </div>
@@ -167,51 +162,59 @@ export default function AnnouncementsPage() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex justify-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-            <button
-              key={p}
-              onClick={() => setPage(p)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                p === page
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10'
-              }`}
-            >
-              {p}
-            </button>
-          ))}
+          <Button variant="outline" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>←</Button>
+          <span className="px-4 py-2 text-slate-500">{page} / {totalPages}</span>
+          <Button variant="outline" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>→</Button>
         </div>
       )}
 
-      {/* Create Modal */}
-      <AnnouncementModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreate}
-        divisions={divisions}
-      />
-
       {/* Detail Modal */}
-      {selectedAnnouncement && (
-        <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title={selectedAnnouncement.title} size="lg">
+      <Modal isOpen={showDetailModal} onClose={() => setShowDetailModal(false)} title={selectedAnnouncement?.title || ''} size="lg">
+        {selectedAnnouncement && (
           <div className="space-y-4">
             <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
               <span>{selectedAnnouncement.author_name}</span>
               <span>·</span>
               <span>{new Date(selectedAnnouncement.created_at + 'Z').toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-              {selectedAnnouncement.division_name && (
-                <>
-                  <span>·</span>
-                  <Badge variant="default">{selectedAnnouncement.division_name}</Badge>
-                </>
-              )}
+              {selectedAnnouncement.priority === 'urgent' && <Badge variant="danger">Urgent</Badge>}
+              {selectedAnnouncement.priority === 'high' && <Badge variant="warning">Penting</Badge>}
             </div>
-            <div className="prose prose-sm dark:prose-invert max-w-none text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+            <div className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
               {selectedAnnouncement.content}
             </div>
           </div>
-        </Modal>
-      )}
+        )}
+      </Modal>
+
+      {/* Create Modal */}
+      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="Buat Pengumuman" size="lg">
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Judul</label>
+            <input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required placeholder="Judul pengumuman..."
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Konten</label>
+            <textarea value={newContent} onChange={(e) => setNewContent(e.target.value)} required placeholder="Isi pengumuman..." rows={5}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white resize-none" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Prioritas</label>
+            <select value={newPriority} onChange={(e) => setNewPriority(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
+              <option value="low">Rendah</option>
+              <option value="normal">Normal</option>
+              <option value="high">Tinggi</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>Batal</Button>
+            <Button type="submit" disabled={submitting}>{submitting ? 'Membuat...' : 'Buat'}</Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

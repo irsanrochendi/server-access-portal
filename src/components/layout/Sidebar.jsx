@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAnnouncements } from '../../contexts/AnnouncementContext';
 import {
   LayoutDashboard,
   Server,
@@ -21,7 +22,7 @@ import {
 // General nav — visible to ALL users (staff + admin)
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/announcements', icon: Megaphone, label: 'Pengumuman' },
+  { to: '/announcements', icon: Megaphone, label: 'Pengumuman', badge: 'announcements' },
   { to: '/chat', icon: MessageCircle, label: 'Chat' },
   { to: '/forum', icon: MessagesSquare, label: 'Forum' },
   { to: '/online-users', icon: Users, label: 'Online Users' },
@@ -43,8 +44,15 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
 
   const closeMobile = () => setIsMobileOpen(false);
 
+  // Badge for announcements
+  const { newCount } = useAnnouncements();
+
   const renderNavItem = (item) => {
     const isActive = location.pathname.startsWith(item.to);
+
+    // Get badge count if specified
+    const showBadge = item.badge === 'announcements' && newCount > 0;
+
     return (
       <NavLink
         key={item.to}
@@ -66,6 +74,16 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
             opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50">
             {item.label}
           </div>
+        )}
+        {/* Badge */}
+        {showBadge && (
+          <span className={`
+            absolute flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full
+            bg-red-500 text-white shadow-md
+            ${collapsed ? 'top-0 right-0' : '-top-1 -right-1'}
+          `}>
+            {newCount > 99 ? '99+' : newCount}
+          </span>
         )}
       </NavLink>
     );

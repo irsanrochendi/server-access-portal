@@ -45,8 +45,12 @@ initDb();
 // Jalankan manual: node seed.js && node seed-extra.js
 
 // Middleware
-app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:80', 'http://localhost:81'] }));
+app.use(cors());
 app.use(express.json());
+
+// Serve frontend static files
+const distPath = join(__dirname, '..', 'dist');
+app.use(express.static(distPath));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -73,7 +77,7 @@ app.use('/api/chat', chatRoutes);
 // Socket.IO real-time chat
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5173', 'http://localhost:80', 'http://localhost:81'],
+    origin: true,
     methods: ['GET', 'POST'],
   },
 });
@@ -86,7 +90,12 @@ startAutoBackup();
 // Health
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
-// â”€â”€â”€ Token cleanup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// SPA fallback — serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(join(distPath, 'index.html'));
+});
+
+// Token cleanup
 function cleanupExpiredTokens() {
   try {
     const result = getDb().prepare(

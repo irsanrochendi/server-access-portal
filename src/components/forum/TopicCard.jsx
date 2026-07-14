@@ -34,8 +34,8 @@ export default function TopicCard({ topic }) {
             <h3 className="font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors truncate">
               {topic.title}
             </h3>
-            {topic.is_pinned && <Pin className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
-            {topic.is_locked && <Lock className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
+            {!!topic.is_pinned && <Pin className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />}
+            {!!topic.is_locked && <Lock className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />}
             {topic.category_name && <Badge variant="info" size="sm">{topic.category_name}</Badge>}
           </div>
           <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-1">

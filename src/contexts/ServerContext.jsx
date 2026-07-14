@@ -23,10 +23,15 @@ export function ServerProvider({ children }) {
   }, []);
 
   const fetchLogs = useCallback(() => {
+    // Only admin can see activity logs
+    if (user?.role !== 'admin') {
+      setLogs([]);
+      return Promise.resolve();
+    }
     return api.getLogs({ limit: 100 })
-      .then(data => setLogs(data.logs))
+      .then(data => setLogs(data.logs || []))
       .catch(console.error);
-  }, []);
+  }, [user]);
 
   // Initial load — re-fetch setiap kali user ganti (login/logout)
   useEffect(() => {

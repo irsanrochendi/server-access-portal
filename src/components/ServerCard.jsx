@@ -21,8 +21,13 @@ async function openServer(server) {
   // SSH: client-side via ssh:// protocol handler (Windows 10/11 bawaan)
   if (proto === 'SSH') {
     const ip = field(server, 'ip_address', 'ipAddress');
+    if (!ip) { alert('IP server tidak ditemukan'); return; }
     const port = field(server, 'port', 'port');
     const sshUrl = `ssh://${ip}${port && port !== 22 ? ':' + port : ''}`;
+    // Fire-and-forget: jangan await biar window.open ga kena popup blocker
+    logActivity('server_access', 'server', `Membuka server ${name} via SSH`, { server_id: server.id, protocol: 'SSH' });
+    // Server-side audit trail via token system (async, fire-and-forget)
+    api.requestOpenToken(server.id, 'ssh').catch(() => {});
     window.open(sshUrl, '_blank');
     return;
   }
@@ -41,10 +46,10 @@ async function openServer(server) {
       a.click();
       a.remove();
     } else if (pref === 'edge') {
-      // HTTP/HTTPS via Edge (microsoft-edge: protocol handler Windows)
+      // HTTP/HTTPS via Edge — pake microsoft-edge: protocol (buka langsung)
       window.open(`microsoft-edge:${window.location.origin}/api/tokens/launch/${server.id}?token=${encodeURIComponent(result.token)}`, '_blank');
     } else {
-      // HTTP/HTTPS: open di default browser client
+      // HTTP/HTTPS: open di default browser client (jalan di client, bukan server!)
       window.open(`/api/tokens/launch/${server.id}?token=${encodeURIComponent(result.token)}`, '_blank');
     }
   } catch (e) { alert('Gagal: ' + e.message); }

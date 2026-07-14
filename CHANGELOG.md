@@ -1,5 +1,35 @@
 # Changelog — Server Access Portal AST
 
+## v2.2.0 — Chat Room Management & Announcement Badge (2026-07-14)
+
+### 💬 Chat Room Management
+- **Create chat room** — Admin dan staff bisa buat room chat baru dengan nama custom
+- **Room list UI** — "+" button di sidebar channel untuk buat room baru
+- **Create room modal** — Input nama room dengan validasi
+- **Backend API** — `POST /api/chat/rooms` untuk create, `DELETE /api/chat/rooms/:id` untuk delete
+- **Database table** — `chat_rooms` table untuk menyimpan custom rooms
+
+### 🔔 Announcement Notification Badge
+- **Badge di sidebar** — Badge merah dengan jumlah pengumuman baru di menu "Pengumuman"
+- **Persistent state** — Badge menggunakan `localStorage` untuk track sudah pernah dilihat atau belum
+- **Auto-reset** — Badge hilang setelah user buka halaman Pengumuman
+- **Session-aware** — Badge muncul lagi saat user logout/login ulang
+
+### 🐛 Bug Fixes
+- **Typing indicator username** — Fix `userName` vs `username` mismatch antara backend Socket.IO dan frontend
+- **Typing indicator array handling** — Fix TypingIndicator component untuk handle both array dan string input
+- **Forum `0` rendering** — Fix `{!!topic.is_locked && ...}` untuk prevent integer `0` appearing as text
+- **Forum permissions** — Non-admin users hanya bisa reply, tidak bisa hapus thread/reply
+- **403 error for non-admin** — Fix `ServerContext` yang memanggil logs API untuk semua user
+
+### 🎨 UI Improvements
+- **Unified Dashboard** — Staff dan admin view sama (stats cards, ping latency, credential reveal)
+- **Remove pulse animation** — Hapus animasi kedip-kedip dari server card logos
+- **Rounded corners** — Tambah rounded corners di chat page container
+- **Dark mode announcements** — AnnouncementCard dengan proper dark mode styling
+
+---
+
 ## v2.1.0 — Portal Refactor & Activity Logging (2026-07-05)
 
 ### 🔐 Built-in Credential Management

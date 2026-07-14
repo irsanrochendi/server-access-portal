@@ -1,13 +1,27 @@
 import { Megaphone, Pin, ChevronRight } from 'lucide-react';
 import Badge from '../ui/Badge';
 
+function getTimeAgo(dateStr) {
+  const now = new Date();
+  const date = new Date(dateStr + 'Z');
+  const diffMs = now - date;
+  const diffMin = Math.floor(diffMs / 60000);
+  if (diffMin < 1) return 'Baru saja';
+  if (diffMin < 60) return `${diffMin} menit lalu`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} jam lalu`;
+  const diffDay = Math.floor(diffHr / 24);
+  if (diffDay < 7) return `${diffDay} hari lalu`;
+  return date.toLocaleDateString('id-ID');
+}
+
 export default function AnnouncementCard({ announcement, onClick }) {
   const timeAgo = getTimeAgo(announcement.created_at);
 
   return (
     <div
       onClick={onClick}
-      className="group bg-white dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10 p-5 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-700 transition-all cursor-pointer"
+      className="group bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-5 hover:shadow-lg hover:border-blue-300 dark:hover:border-blue-600 transition-all cursor-pointer"
     >
       <div className="flex items-start gap-4">
         <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 flex items-center justify-center flex-shrink-0">
@@ -31,30 +45,10 @@ export default function AnnouncementCard({ announcement, onClick }) {
             <span>{announcement.author_name}</span>
             <span>·</span>
             <span>{timeAgo}</span>
-            {announcement.division_name && (
-              <>
-                <span>·</span>
-                <Badge variant="default">{announcement.division_name}</Badge>
-              </>
-            )}
           </div>
         </div>
         <ChevronRight className="w-5 h-5 text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors flex-shrink-0 mt-2" />
       </div>
     </div>
   );
-}
-
-function getTimeAgo(dateStr) {
-  const now = new Date();
-  const date = new Date(dateStr + 'Z');
-  const diffMs = now - date;
-  const diffMin = Math.floor(diffMs / 60000);
-  if (diffMin < 1) return 'Baru saja';
-  if (diffMin < 60) return `${diffMin} menit lalu`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr} jam lalu`;
-  const diffDay = Math.floor(diffHr / 24);
-  if (diffDay < 7) return `${diffDay} hari lalu`;
-  return date.toLocaleDateString('id-ID');
 }

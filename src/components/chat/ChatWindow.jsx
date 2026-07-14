@@ -3,7 +3,7 @@ import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 import TypingIndicator from './TypingIndicator';
 import { useAuth } from '../../contexts/AuthContext';
-import { MessageCircle } from 'lucide-react';
+import { Hash } from 'lucide-react';
 
 export default function ChatWindow({ room, messages, typingUser, onSend, onTyping, loading }) {
   const { user } = useAuth();
@@ -15,9 +15,9 @@ export default function ChatWindow({ room, messages, typingUser, onSend, onTypin
 
   if (!room) {
     return (
-      <div className="flex-1 flex items-center justify-center text-slate-400 dark:text-slate-500">
+      <div className="flex-1 flex items-center justify-center text-slate-500 dark:text-slate-400">
         <div className="text-center">
-          <MessageCircle className="w-16 h-16 mx-auto mb-4 opacity-30" />
+          <Hash className="w-16 h-16 mx-auto mb-4 opacity-30" />
           <p className="font-medium">Pilih channel untuk mulai chat</p>
         </div>
       </div>
@@ -27,20 +27,24 @@ export default function ChatWindow({ room, messages, typingUser, onSend, onTypin
   const roomMessages = messages[room.id] || [];
 
   return (
-    <div className="flex-1 flex flex-col min-w-0">
+    <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-slate-800/30">
       {/* Room header */}
-      <div className="px-4 py-3 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.02]">
-        <h3 className="font-semibold text-slate-900 dark:text-white"># {room.name}</h3>
+      <div className="flex-shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <Hash className="w-5 h-5 text-slate-400" />
+          <h3 className="font-semibold text-slate-900 dark:text-white">{room.name}</h3>
+        </div>
       </div>
 
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {loading && roomMessages.length === 0 ? (
           <div className="text-center text-slate-400 py-8">Memuat pesan...</div>
         ) : roomMessages.length === 0 ? (
-          <div className="text-center text-slate-400 dark:text-slate-500 py-16">
-            <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Belum ada pesan. Kirim pesan pertama!</p>
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <Hash className="w-12 h-12 text-slate-300 dark:text-slate-600 mb-3" />
+            <p className="text-slate-400 dark:text-slate-500">Belum ada pesan</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500">Kirim pesan pertama!</p>
           </div>
         ) : (
           roomMessages.map((msg, i) => (

@@ -58,36 +58,34 @@ export function SocketProvider({ children }) {
       });
     });
 
-    socket.on('chat:user-typing', ({ username, room }) => {
+    socket.on('chat:user-typing', ({ userName, room }) => {
+      if (!userName || !room) return;
       setTypingUsers((prev) => {
         const roomUsers = prev[room] || [];
-        if (roomUsers.includes(username)) return prev;
-        return { ...prev, [room]: [...roomUsers, username] };
+        if (roomUsers.includes(userName)) return prev;
+        return { ...prev, [room]: [...roomUsers, userName] };
       });
 
-      // Auto-clear typing after 3s if stop-typing not received
-      const key = `${room}:${username}`;
-      if (typingTimeoutsRef.current[key]) {
-        clearTimeout(typingTimeoutsRef.current[key]);
-      }
+      const key = `${room}:${userName}`;
+      if (typingTimeoutsRef.current[key]) clearTimeout(typingTimeoutsRef.current[key]);
       typingTimeoutsRef.current[key] = setTimeout(() => {
         setTypingUsers((prev) => {
           const users = prev[room] || [];
-          return { ...prev, [room]: users.filter((u) => u !== username) };
+          return { ...prev, [room]: users.filter((u) => u !== userName) };
         });
         delete typingTimeoutsRef.current[key];
       }, 3000);
     });
 
-    socket.on('chat:user-stop-typing', ({ username, room }) => {
-      const key = `${room}:${username}`;
+    socket.on('chat:user-stop-typing', ({ userName, room }) => {
+      const key = `${room}:${userName}`;
       if (typingTimeoutsRef.current[key]) {
         clearTimeout(typingTimeoutsRef.current[key]);
         delete typingTimeoutsRef.current[key];
       }
       setTypingUsers((prev) => {
         const users = prev[room] || [];
-        return { ...prev, [room]: users.filter((u) => u !== username) };
+        return { ...prev, [room]: users.filter((u) => u !== userName) };
       });
     });
 

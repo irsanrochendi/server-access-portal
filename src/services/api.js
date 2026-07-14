@@ -131,6 +131,8 @@ export const api = {
 
   // Chat
   getChatRooms: () => request('/chat/rooms'),
+  createChatRoom: (data) => request('/chat/rooms', { method: 'POST', body: JSON.stringify(data) }),
+  deleteChatRoom: (id) => request(`/chat/rooms/${id}`, { method: 'DELETE' }),
   getChatMessages: (room, params = {}) => {
     const q = new URLSearchParams();
     if (params.limit) q.set('limit', params.limit);
