@@ -49,6 +49,7 @@ const settings = [
   ['items_per_page', '12', 'integer'],
   ['session_timeout', '120', 'integer'],
   ['max_login_attempts', '5', 'integer'],
+  ['chat_upload_whitelist', '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.zip,.rar,.exe,.msi,.7z', 'string'],
 ];
 
 const stmtSetting = db.prepare(`INSERT OR IGNORE INTO settings (key, value, type) VALUES (?, ?, ?)`);

@@ -15,27 +15,42 @@ router.use(authenticate);
 const uploadsDir = join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
 
-const storage = multer.diskStorage({
-  destination: uploadsDir,
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    const uniqueName = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
-    cb(null, uniqueName);
-  },
-});
-
-const upload = multer({
-  storage,
-  fileFilter: (req, file, cb) => {
-    const allowed = ['.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.zip', '.rar'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowed.includes(ext)) {
-      return cb(new Error('Tipe file tidak diizinkan'));
+// Get allowed file extensions from settings
+function getAllowedExtensions() {
+  try {
+    const db = getDb();
+    const setting = db.prepare("SELECT value FROM settings WHERE key = 'chat_upload_whitelist'").get();
+    if (!setting?.value) {
+      return ['.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.zip', '.rar', '.exe', '.msi', '.7z'];
     }
-    cb(null, true);
-  },
-  limits: { fileSize: 10 * 1024 * 1024 },
-});
+    return setting.value.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+  } catch {
+    return ['.pdf', '.doc', '.docx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.zip', '.rar', '.exe', '.msi', '.7z'];
+  }
+}
+
+// Get upload handler with current whitelist
+function getUpload() {
+  return multer({
+    storage: multer.diskStorage({
+      destination: uploadsDir,
+      filename: (req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const uniqueName = `chat-${Date.now()}-${Math.random().toString(36).slice(2, 9)}${ext}`;
+        cb(null, uniqueName);
+      },
+    }),
+    fileFilter: (req, file, cb) => {
+      const allowed = getAllowedExtensions();
+      const ext = path.extname(file.originalname).toLowerCase();
+      if (!allowed.includes(ext)) {
+        return cb(new Error('Tipe file tidak diizinkan. Izinkan: ' + allowed.join(', ')));
+      }
+      cb(null, true);
+    },
+    limits: { fileSize: 10 * 1024 * 1024 },
+  });
+}
 
 // GET /api/chat/rooms
 router.get('/rooms', (req, res) => {
@@ -80,6 +95,13 @@ router.get('/rooms', (req, res) => {
   }
 
   res.json({ rooms });
+});
+
+// GET /api/chat/upload-whitelist — get allowed file extensions for chat uploads
+router.get('/upload-whitelist', (req, res) => {
+  const allowed = getAllowedExtensions();
+  const formatted = allowed.map(e => e.replace('.', '').toUpperCase()).join(', ');
+  res.json({ extensions: allowed, display: formatted });
 });
 
 // POST /api/chat/rooms - Create new chat room
@@ -206,13 +228,10 @@ router.get('/rooms/:room/messages', (req, res) => {
 
 // POST /api/chat/rooms/:room/upload
 router.post('/rooms/:room/upload', (req, res, next) => {
-  upload.single('file')(req, res, (err) => {
+  getUpload().single('file')(req, res, (err) => {
     if (err) {
       if (err.code === 'LIMIT_FILE_SIZE') {
         return res.status(413).json({ error: 'File terlalu besar. Maksimal 10MB' });
-      }
-      if (err.message === 'Tipe file tidak diizinkan') {
-        return res.status(400).json({ error: 'Tipe file tidak diizinkan. Gunakan: PDF, DOC, TXT, PNG, JPG, GIF, ZIP, RAR' });
       }
       return res.status(400).json({ error: err.message || 'Gagal upload file' });
     }

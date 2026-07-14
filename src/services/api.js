@@ -141,6 +141,7 @@ export const api = {
     return request(`/chat/rooms/${encodeURIComponent(room)}/messages${qs ? '?' + qs : ''}`);
   },
   deleteChatMessage: (id) => request(`/chat/messages/${id}`, { method: 'DELETE' }),
+  getChatUploadWhitelist: () => request('/chat/upload-whitelist'),
 
   // Forum
   getForumCategories: () => request('/forum/categories'),

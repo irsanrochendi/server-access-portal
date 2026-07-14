@@ -1,24 +1,57 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X } from 'lucide-react';
+import { api } from '../../services/api';
+
+// Allowed extensions map for display
+const EXT_DISPLAY = {
+  '.pdf': 'PDF', '.doc': 'DOC', '.docx': 'DOCX', '.txt': 'TXT',
+  '.png': 'PNG', '.jpg': 'JPG', '.jpeg': 'JPEG', '.gif': 'GIF',
+  '.zip': 'ZIP', '.rar': 'RAR', '.exe': 'EXE', '.msi': 'MSI', '.7z': '7Z',
+};
+
+function formatAllowed(extensions) {
+  return extensions
+    .map(e => EXT_DISPLAY[e] || e.replace('.', '').toUpperCase())
+    .join(', ');
+}
 
 export default function ChatInput({ onSend, onTyping, room }) {
   const [text, setText] = useState('');
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const [whitelist, setWhitelist] = useState([]);
   const fileInputRef = useRef(null);
   const typingTimerRef = useRef(null);
+
+  // Fetch whitelist on mount
+  useEffect(() => {
+    api.getChatUploadWhitelist()
+      .then(data => setWhitelist(data.extensions || []))
+      .catch(() => {});
+  }, []);
 
   const handleTyping = () => {
     onTyping(room);
   };
 
   const handleFileChange = (e) => {
+    setUploadError('');
     const f = e.target.files?.[0];
-    if (f) setFile(f);
+    if (!f) return;
+    const ext = '.' + f.name.split('.').pop().toLowerCase();
+    if (!whitelist.includes(ext)) {
+      setUploadError(`Format tidak diizinkan. Gunakan: ${formatAllowed(whitelist)}`);
+      setFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    setFile(f);
   };
 
   const removeFile = () => {
     setFile(null);
+    setUploadError('');
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -41,11 +74,12 @@ export default function ChatInput({ onSend, onTyping, room }) {
         });
         if (!res.ok) throw new Error('Upload failed');
         const data = await res.json();
+        if (data.error) throw new Error(data.error);
         fileUrl = data.file_url;
         fileName = data.file_name;
       } catch (err) {
         console.error('Upload error:', err);
-        alert('Gagal upload file');
+        setUploadError(err.message || 'Gagal upload file');
         setUploading(false);
         return;
       }
@@ -66,6 +100,13 @@ export default function ChatInput({ onSend, onTyping, room }) {
 
   return (
     <div className="border-t border-slate-200 dark:border-white/10 p-3 bg-white dark:bg-slate-900/50">
+      {/* Upload error */}
+      {uploadError && (
+        <div className="mb-2 px-3 py-2 rounded-lg bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20">
+          <p className="text-xs text-red-600 dark:text-red-400">{uploadError}</p>
+        </div>
+      )}
+
       {/* File preview — modern compact chip, locked to input width */}
       {file && (
         <div className="mb-2 pl-11 pr-12">
@@ -93,7 +134,7 @@ export default function ChatInput({ onSend, onTyping, room }) {
         <button
           onClick={() => fileInputRef.current?.click()}
           className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex-shrink-0"
-          title="Lampirkan file (maks. 10MB)"
+          title={whitelist.length > 0 ? `Lampirkan file (format: ${formatAllowed(whitelist)})` : 'Lampirkan file'}
         >
           <Paperclip className="w-5 h-5" />
         </button>

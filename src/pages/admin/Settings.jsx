@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Save, Settings as SettingsIcon, Plus, Trash2, Tag, Building2, Upload, Image, Shield, ChevronDown, ChevronRight, Info, Check, HardDrive, Clock, Download, Play, Monitor, Lock, Globe, Database, RotateCcw } from 'lucide-react';
+import { Save, Settings as SettingsIcon, Plus, Trash2, Tag, Building2, Upload, Image, Shield, ChevronDown, ChevronRight, Info, Check, HardDrive, Clock, Download, Play, Monitor, Lock, Globe, Database, RotateCcw, FileText } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useToast } from '../../contexts/ToastContext';
 import { api } from '../../services/api';
@@ -361,6 +361,28 @@ export default function Settings() {
                     <option value="20" className="bg-white dark:bg-[#1a1a24] text-slate-900 dark:text-white">20</option>
                   </select>
                 </div>
+              </div>
+            </div>
+
+            {/* Chat Upload Whitelist */}
+            <div className="bg-white dark:bg-[#0d1321] rounded-2xl border border-slate-200 dark:border-white/10 p-6">
+              <h2 className="text-base font-semibold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+                <FileText className="w-5 h-5 text-indigo-500" /> Upload Chat — Whitelist Format
+              </h2>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                Format file yang boleh dikirim lewat chat. Pisahkan dengan koma. Contoh: <code className="text-xs bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded">pdf, doc, zip, exe, msi</code>
+              </p>
+              <div className="max-w-2xl">
+                <textarea
+                  value={get('chat_upload_whitelist', '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.gif,.zip,.rar,.exe,.msi,.7z')}
+                  onChange={(e) => handleChange('chat_upload_whitelist', e.target.value)}
+                  rows={2}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500/50 resize-none"
+                  placeholder=".pdf,.doc,.zip,.exe,.msi"
+                />
+                <p className="text-xs text-slate-400 mt-2">
+                  Ekstensi default: PDF, DOC, DOCX, TXT, PNG, JPG, JPEG, GIF, ZIP, RAR, EXE, MSI, 7Z
+                </p>
               </div>
             </div>
           </div>
