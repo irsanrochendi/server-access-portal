@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Sidebar from './layout/Sidebar';
 import Header from './Header';
 import { SocketProvider } from '../contexts/SocketContext';
+import ChatWidget from './chat/ChatWidget';
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,6 +28,9 @@ export default function Layout() {
             </main>
           </div>
         </div>
+
+        {/* Floating Chat Widget — always accessible, bottom-right */}
+        <ChatWidget />
       </div>
     </SocketProvider>
   );

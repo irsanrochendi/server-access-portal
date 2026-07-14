@@ -5,6 +5,7 @@ import { verifyToken } from '../services/auth.js';
  * Validate that the current user is allowed to access the given room.
  * Public rooms (general, announcements) are allowed for everyone.
  * Division rooms require user.division to match the division name, or admin role.
+ * Custom rooms (numeric string id) are allowed if public, private if user is creator/admin.
  */
 function checkRoomAccess(user, room) {
   // Public rooms — everyone can join
@@ -37,6 +38,29 @@ function checkRoomAccess(user, room) {
     }
 
     return { allowed: true };
+  }
+
+  // Custom rooms — numeric id stored as string
+  const roomId = parseInt(room, 10);
+  if (!isNaN(roomId)) {
+    const db = getDb();
+    const chatRoom = db.prepare(
+      'SELECT * FROM chat_rooms WHERE id = ? AND is_active = 1'
+    ).get(roomId);
+
+    if (!chatRoom) {
+      return { allowed: false, error: 'Room tidak ditemukan' };
+    }
+
+    if (chatRoom.type === 'public') {
+      return { allowed: true };
+    }
+
+    if (user.role === 'admin' || chatRoom.created_by === user.id) {
+      return { allowed: true };
+    }
+
+    return { allowed: false, error: 'Anda tidak memiliki akses ke room ini' };
   }
 
   return { allowed: false, error: 'Room tidak valid' };

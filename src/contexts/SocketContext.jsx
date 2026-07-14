@@ -143,6 +143,7 @@ export function SocketProvider({ children }) {
   const value = {
     socket: socketRef.current,
     connected,
+    connected,
     messages,
     typingUsers,
     unreadChatCount,

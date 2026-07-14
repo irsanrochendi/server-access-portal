@@ -65,24 +65,26 @@ export default function ChatInput({ onSend, onTyping, room }) {
   };
 
   return (
-    <div className="border-t border-slate-200 dark:border-white/10 p-3 bg-white dark:bg-white/[0.02]">
-      {/* File preview — compact, doesn't break layout */}
+    <div className="border-t border-slate-200 dark:border-white/10 p-3 bg-white dark:bg-slate-900/50">
+      {/* File preview — modern compact chip, locked to input width */}
       {file && (
-        <div className="mb-2 p-2 bg-slate-50 dark:bg-white/5 rounded-xl flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
-            {file.type.startsWith('image/') ? (
-              <img src={URL.createObjectURL(file)} alt={file.name} className="w-full h-full object-cover rounded-lg" />
-            ) : (
-              <span className="text-lg">📎</span>
-            )}
+        <div className="mb-2 pl-11 pr-12">
+          <div className="group flex items-center gap-3 max-w-full rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-[#252532] px-3 py-2 shadow-sm">
+            <div className="w-8 h-8 rounded-lg bg-blue-600/10 dark:bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+              <Paperclip className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-slate-700 dark:text-white/95 truncate">{file.name}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-400">{(file.size / 1024).toFixed(1)} KB</p>
+            </div>
+            <button
+              onClick={removeFile}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/20 transition-colors flex-shrink-0"
+              title="Hapus lampiran"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate">{file.name}</p>
-            <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(1)} KB</p>
-          </div>
-          <button onClick={removeFile} className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-red-500 transition-colors flex-shrink-0">
-            <X className="w-4 h-4" />
-          </button>
         </div>
       )}
 
@@ -90,8 +92,8 @@ export default function ChatInput({ onSend, onTyping, room }) {
         {/* File attach button */}
         <button
           onClick={() => fileInputRef.current?.click()}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex-shrink-0"
-          title="Lampirkan file"
+          className="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors flex-shrink-0"
+          title="Lampirkan file (maks. 10MB)"
         >
           <Paperclip className="w-5 h-5" />
         </button>
@@ -110,9 +112,8 @@ export default function ChatInput({ onSend, onTyping, room }) {
             onKeyDown={handleKeyDown}
             placeholder="Ketik pesan..."
             rows={1}
-            className="w-full resize-none rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
+            className="w-full resize-none rounded-xl border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-[#252532] px-4 py-2.5 text-sm text-slate-900 dark:text-white/95 placeholder-slate-400 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
           />
-          <p className="text-[10px] text-slate-400 mt-1 pl-1">Maksimal 10MB per file</p>
         </div>
 
         {/* Send button */}

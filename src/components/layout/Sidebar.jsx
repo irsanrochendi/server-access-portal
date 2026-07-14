@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useAnnouncements } from '../../contexts/AnnouncementContext';
-import { useSocket } from '../../contexts/SocketContext';
 import {
   LayoutDashboard,
   Server,
@@ -16,7 +15,6 @@ import {
   Sun,
   Moon,
   Megaphone,
-  MessageCircle,
   MessagesSquare,
 } from 'lucide-react';
 
@@ -24,7 +22,6 @@ import {
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/announcements', icon: Megaphone, label: 'Pengumuman', badge: 'announcements' },
-  { to: '/chat', icon: MessageCircle, label: 'Chat', badge: 'chat' },
   { to: '/forum', icon: MessagesSquare, label: 'Forum' },
   { to: '/online-users', icon: Users, label: 'Online Users' },
 ];
@@ -47,13 +44,11 @@ export default function Sidebar({ collapsed, onToggle, onLogout }) {
 
   // Badge counts
   const { newCount: announceCount } = useAnnouncements();
-  const { unreadChatCount } = useSocket();
 
   const renderNavItem = (item) => {
     const isActive = location.pathname.startsWith(item.to);
     let badgeCount = 0;
     if (item.badge === 'announcements') badgeCount = announceCount;
-    if (item.badge === 'chat') badgeCount = unreadChatCount;
     const showBadge = badgeCount > 0;
 
     return (

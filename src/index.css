@@ -12,7 +12,7 @@
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
   /* Extended color palette */
   --color-bg-light: #f8fafc;
@@ -266,4 +266,17 @@ select option:hover {
 
 .dark select option[value="staff"] {
   color: #e2e8f0;
+}
+
+/* ============================================
+   💬 ChatWidget — Premium Keyframe Animations
+   ============================================ */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 18px rgba(239, 68, 68, 0.7);
+  }
 }

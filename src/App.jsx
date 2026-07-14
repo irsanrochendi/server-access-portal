@@ -7,7 +7,6 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import AnnouncementsPage from './pages/announcements/AnnouncementsPage';
 import AdminServers from './pages/admin/AdminServers';
-import ChatPage from './pages/chat/ChatPage';
 import ForumPage from './pages/forum/ForumPage';
 import ForumTopicPage from './pages/forum/ForumTopicPage';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -40,7 +39,6 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/online-users" element={<OnlineUsers />} />
         <Route path="/announcements" element={<AnnouncementsPage />} />
-        <Route path="/chat" element={<ChatPage />} />
         <Route path="/forum" element={<ForumPage />} />
         <Route path="/forum/topics/:id" element={<ForumTopicPage />} />
 

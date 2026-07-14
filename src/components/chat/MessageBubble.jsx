@@ -22,7 +22,7 @@ export default function MessageBubble({ message, isOwn }) {
       <div className={`max-w-[75%] ${isOwn ? 'order-2' : 'order-1'}`}>
         {/* Sender name (others only) */}
         {!isOwn && (
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 ml-1">
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-300 mb-1 ml-1">
             {message.sender?.name || message.sender_name}
           </p>
         )}
@@ -30,8 +30,8 @@ export default function MessageBubble({ message, isOwn }) {
         {/* Message bubble */}
         <div className={`rounded-2xl px-4 py-2.5 ${
           isOwn
-            ? 'bg-blue-600 text-white rounded-br-md'
-            : 'bg-white dark:bg-white/10 text-slate-900 dark:text-white rounded-bl-md border border-slate-200 dark:border-white/5'
+            ? 'bg-blue-600 text-white rounded-br-md shadow-md'
+            : 'bg-white dark:bg-[#3a3a4a] text-slate-900 dark:text-white rounded-bl-md border border-slate-200 dark:border-white/15 shadow-md'
         }`}>
           {attachmentUrl ? (
             hasImage && !imgError ? (
@@ -73,7 +73,7 @@ export default function MessageBubble({ message, isOwn }) {
         </div>
 
         {/* Time */}
-        <p className={`text-[10px] text-slate-400 dark:text-slate-500 mt-1 ${isOwn ? 'text-right mr-1' : 'ml-1'}`}>
+        <p className={`text-[10px] text-slate-400 dark:text-slate-400 mt-1 ${isOwn ? 'text-right mr-1' : 'ml-1'}`}>
           {time}
         </p>
       </div>

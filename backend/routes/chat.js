@@ -153,7 +153,18 @@ router.get('/rooms/:room/messages', (req, res) => {
         return res.status(403).json({ error: 'Anda tidak memiliki akses ke room ini' });
       }
     } else {
-      return res.status(400).json({ error: 'Room tidak valid' });
+      // Custom rooms — numeric id stored as string
+      const roomId = parseInt(room, 10);
+      if (isNaN(roomId)) {
+        return res.status(400).json({ error: 'Room tidak valid' });
+      }
+      const chatRoom = db.prepare('SELECT * FROM chat_rooms WHERE id = ? AND is_active = 1').get(roomId);
+      if (!chatRoom) {
+        return res.status(404).json({ error: 'Room tidak ditemukan' });
+      }
+      if (chatRoom.type === 'private' && chatRoom.created_by !== user.id && user.role !== 'admin') {
+        return res.status(403).json({ error: 'Anda tidak memiliki akses ke room ini' });
+      }
     }
   }
 
