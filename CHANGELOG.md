@@ -8,6 +8,7 @@
 - **Light/Dark mode** — widget adapt ke tema global, warna berubah saat toggle tema
 - **Premium glass design** — Double-Bezel (Doppelrand) architecture, backdrop-blur, shadow depth
 - **Custom room support** — buat room baru langsung dari widget dengan tombol **+**
+- **Unread badges** — red badge di toggle (total unread), blue badge per room di dropdown, red badge di header aktif
 - **Message counter badge** — jumlah pesan tampil di header widget
 - **Keyboard shortcut** — `Ctrl+K` untuk toggle widget
 - **Click outside / Escape** — auto-close saat klik di luar atau tekan Escape
@@ -29,6 +30,13 @@
 - **Frontend validation** — file dicek extensinya sebelum upload, error message jelas kalau ditolak
 - **Tooltip info** — hover tombol paperclip menampilkan format yang diizinkan
 - **Default formats** — `.pdf, .doc, .docx, .txt, .png, .jpg, .jpeg, .gif, .zip, .rar, .exe, .msi, .7z`
+
+### 🔧 Technical Implementation
+
+- **Per-room unread tracking** — `unreadByRoom` state map per room ID dengan counter
+- **Badge clearing** — `markChatAsRead()` reset semua unread (total + per-room)
+- **Badge colors** — red (total toggle + active header), blue (per-room dropdown list)
+- **SocketContext fix** — duplicate `connected` export dihapus, proper per-room message counting
 
 ### 🎨 UI Improvements
 
